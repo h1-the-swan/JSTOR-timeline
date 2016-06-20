@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width">
+		<title>D3 Timeline Test</title>
+		<script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+		<style type="text/css">
+		.chart {
+			shape-rendering: crispEdges;
+		}
+
+		.mini text {
+			font: 9px sans-serif;	
+			visibility: hidden;
+		}
+
+		.main text {
+			font: 12px sans-serif;	
+		}
+		text:hover{
+			font: 55px sans-serif;	
+		}
+
+		.miniItem0 {
+			fill: darksalmon;
+			fill-opacity: .7;
+			stroke-width: 6;	
+		}
+
+		.miniItem1 {
+			fill: darkolivegreen;
+			fill-opacity: .7;
+			stroke-width: 6;	
+		}
+
+		.miniItem2 {
+			fill: slategray;
+			fill-opacity: .7;
+			stroke-width: 6;	
+		}
+
+		.brush .extent {
+			stroke: gray;
+			fill: dodgerblue;
+			fill-opacity: .365;
+		}
+		</style>
+	</head>
+	<body>
+		<script src="timeline_tests.js" charset="utf-8"></script>
+	</body>
+</html>

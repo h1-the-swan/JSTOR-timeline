@@ -6,8 +6,11 @@ d3.json(json_fname, function(error, data) {
 	data.forEach(function(d) {
 		d.lane = 0;
 		d.id = d.title;
-		d.start = +d.pubdate.split('-')[0];
-		d.end = d.start + 1;
+		// d.start = +d.pubdate.split('-')[0];
+		// d.end = d.start + 1;
+		d.start = new Date(d.pubdate);
+		d.end = new Date(d.pubdate);
+		d.end = new Date(d.end.setFullYear(d.end.getFullYear()+5));
 	})
 	data = data.sort(function(a, b) {
 			return d3.descending(a.eigenfactor_score, b.eigenfactor_score); 
@@ -27,10 +30,12 @@ d3.json(json_fname, function(error, data) {
 			mainHeight = h - miniHeight - 50;
 
 		//scales
-		var x = d3.scale.linear()
+		// var x = d3.scale.linear()
+		var x = d3.time.scale()
 				.domain([timeBegin, timeEnd])
 				.range([0, w]);
-		var x1 = d3.scale.linear()
+		// var x1 = d3.scale.linear()
+		var x1 = d3.time.scale()
 				.range([0, w]);
 		var y1 = d3.scale.linear()
 				.domain([0, laneLength])
@@ -102,6 +107,16 @@ d3.json(json_fname, function(error, data) {
 			.attr("dy", ".5ex")
 			.attr("text-anchor", "end")
 			.attr("class", "laneText");
+
+		var xAxisMini = d3.svg.axis()
+			.orient("bottom")
+			.ticks(5)
+			.scale(x);
+
+		mini.append("g")
+			.attr("class", "xaxis")
+			.attr("transform", "translate(0," + (miniHeight) + ")")
+			.call(xAxisMini);
 
 		var itemRects = main.append("g")
 							.attr("clip-path", "url(#clip)");

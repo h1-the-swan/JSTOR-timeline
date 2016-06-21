@@ -1,4 +1,4 @@
-// http://bl.ocks.org/bunkat/2338034
+// building off http://bl.ocks.org/bunkat/2338034
 //
 var json_fname = 'Climate_change.json'
 
@@ -9,6 +9,9 @@ d3.json(json_fname, function(error, data) {
 		d.start = +d.pubdate.split('-')[0];
 		d.end = d.start + 1;
 	})
+	data = data.sort(function(a, b) {
+			return d3.descending(a.eigenfactor_score, b.eigenfactor_score); 
+		}).slice(0,25);
 	console.log(data);
 	var lanes = ["Climate change"],
 				laneLength = lanes.length,
@@ -137,7 +140,7 @@ d3.json(json_fname, function(error, data) {
 		display();
 		
 		function display() {
-			var rects, labels,
+			var marks, labels,
 				minExtent = brush.extent()[0],
 				maxExtent = brush.extent()[1],
 				visItems = data.filter(function(d) {return d.start < maxExtent && d.end > minExtent;});
@@ -147,31 +150,37 @@ d3.json(json_fname, function(error, data) {
 
 			x1.domain([minExtent, maxExtent]);
 
-			//update main item rects
-			rects = itemRects.selectAll("rect")
+			//update main item marks
+			marks = itemRects.selectAll("circle")
 			        .data(visItems, function(d) { return d.id; })
-				.attr("x", function(d) {return x1(d.start);})
-				.attr("width", function(d) {return x1(d.end) - x1(d.start);});
+				.attr("cx", function(d) {return x1(d.start);});
+				// .attr("x", function(d) {return x1(d.start);})
+				// .attr("width", function(d) {return x1(d.end) - x1(d.start);});
 			
-			rects.enter().append("rect")
+			marks.enter().append("circle")
 				.attr("class", function(d) {return "miniItem" + d.lane;})
-				.attr("x", function(d) {return x1(d.start);})
-				.attr("y", function(d) {return y1(d.lane) + 10;})
-				.attr("width", function(d) {return x1(d.end) - x1(d.start);})
-				.attr("height", function(d) {return .8 * y1(1);});
+				.attr("cx", function(d) {return x1(d.start);})
+				.attr("cy", function(d) {return y1(d.lane) + mainHeight/2;})
+				.attr('r', 25);
+				// .attr("width", function(d) {return x1(d.end) - x1(d.start);})
+				// .attr("height", function(d) {return .8 * y1(1);});
 
-			rects.exit().remove();
+			marks.exit().remove();
 
 			//update the item labels
+			var rotate = -20;
 			labels = itemRects.selectAll("text")
 				.data(visItems, function (d) { return d.id; })
-				.attr("x", function(d) {return x1(Math.max(d.start, minExtent) + 2);});
+				// .attr("x", function(d) {return x1(Math.max(d.start, minExtent) + 2);});
+				.attr("x", function(d) {d.x = x1(Math.max(d.start, minExtent)); return d.x;})
+				.attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; });
 
 			labels.enter().append("text")
 				.text(function(d) {return d.id;})
-				.attr("x", function(d) {return x1(Math.max(d.start, minExtent));})
-				.attr("y", function(d) {return y1(d.lane + .5);})
-				.attr("text-anchor", "start");
+				.attr("x", function(d) {d.x = x1(Math.max(d.start, minExtent)); return d.x;})
+				.attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
+				.attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })
+				.attr("text-anchor", "end");
 
 			labels.exit().remove();
 

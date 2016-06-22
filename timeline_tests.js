@@ -25,8 +25,8 @@ d3.json(json_fname, function(error, data) {
 
 		var m = [20, 15, 15, 120], //top right bottom left
 			w = 960 - m[1] - m[3],
-			h = 500 - m[0] - m[2],
-			miniHeight = laneLength * 12 + 50,
+			h = 350 - m[0] - m[2],
+			miniHeight = laneLength * 12 + 30,
 			mainHeight = h - miniHeight - 50;
 
 		//scales
@@ -110,7 +110,7 @@ d3.json(json_fname, function(error, data) {
 
 		var xAxisMini = d3.svg.axis()
 			.orient("bottom")
-			.ticks(5)
+			// .ticks(5)
 			.scale(x);
 
 		mini.append("g")
@@ -118,27 +118,39 @@ d3.json(json_fname, function(error, data) {
 			.attr("transform", "translate(0," + (miniHeight) + ")")
 			.call(xAxisMini);
 
+		var xAxisMain = d3.svg.axis()
+			.orient("top")
+			.scale(x1);
+
+		var xAxisMainObj = main.append("g")
+			.attr("class", "xaxis")
+			.call(xAxisMain);
+
 		var itemRects = main.append("g")
 							.attr("clip-path", "url(#clip)");
 		
 		//mini item rects
 		mini.append("g").selectAll("miniItems")
 			.data(data)
-			.enter().append("rect")
+			// .enter().append("rect")
+			.enter().append("circle")
 			.attr("class", function(d) {return "miniItem" + d.lane;})
-			.attr("x", function(d) {return x(d.start);})
-			.attr("y", function(d) {return y2(d.lane + .5) - 5;})
-			.attr("width", function(d) { return x(d.end) - x(d.start);})
-			.attr("height", 10);
+			// .attr("x", function(d) {return x(d.start);})
+			// .attr("y", function(d) {return y2(d.lane + .5) - 5;})
+			.attr("cx", function(d) {return x(d.start);})
+			.attr("cy", function(d) {return y2(d.lane + .5) - 5;})
+			// .attr("width", function(d) { return x(d.end) - x(d.start);})
+			// .attr("height", 10);
+			.attr("r", 5);
 
 		//mini labels
-		mini.append("g").selectAll(".miniLabels")
-			.data(data)
-			.enter().append("text")
-			.text(function(d) {return d.id;})
-			.attr("x", function(d) {return x(d.start);})
-			.attr("y", function(d) {return y2(d.lane + .5);})
-			.attr("dy", ".5ex");
+		// mini.append("g").selectAll(".miniLabels")
+		// 	.data(data)
+		// 	.enter().append("text")
+		// 	.text(function(d) {return d.id;})
+		// 	.attr("x", function(d) {return x(d.start);})
+		// 	.attr("y", function(d) {return y2(d.lane + .5);})
+		// 	.attr("dy", ".5ex");
 
 		//brush
 		var brush = d3.svg.brush()
@@ -151,6 +163,13 @@ d3.json(json_fname, function(error, data) {
 			.selectAll("rect")
 			.attr("y", 1)
 			.attr("height", miniHeight - 1);
+
+		// initialize brush
+		var brushInit = [
+			new Date("1970-01-01"),
+			new Date("1995-01-01")
+			];
+		brush.extent(brushInit);
 
 		display();
 		
@@ -166,6 +185,7 @@ d3.json(json_fname, function(error, data) {
 			x1.domain([minExtent, maxExtent]);
 
 			//update main item marks
+			var rad = 15
 			marks = itemRects.selectAll("circle")
 			        .data(visItems, function(d) { return d.id; })
 				.attr("cx", function(d) {return x1(d.start);});
@@ -175,8 +195,8 @@ d3.json(json_fname, function(error, data) {
 			marks.enter().append("circle")
 				.attr("class", function(d) {return "miniItem" + d.lane;})
 				.attr("cx", function(d) {return x1(d.start);})
-				.attr("cy", function(d) {return y1(d.lane) + mainHeight/2;})
-				.attr('r', 25);
+				.attr("cy", function(d) {return y1(d.lane)+ rad;})
+				.attr('r', rad);
 				// .attr("width", function(d) {return x1(d.end) - x1(d.start);})
 				// .attr("height", function(d) {return .8 * y1(1);});
 
@@ -194,10 +214,14 @@ d3.json(json_fname, function(error, data) {
 				.text(function(d) {return d.id;})
 				.attr("x", function(d) {d.x = x1(Math.max(d.start, minExtent)); return d.x;})
 				.attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
+				.attr("y", function(d) {d.y = y1(d.lane)+rad; return d.y;})
 				.attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })
 				.attr("text-anchor", "end");
 
 			labels.exit().remove();
+
+			//update axis
+			xAxisMainObj.call(xAxisMain);
 
 		}
 });

@@ -180,6 +180,7 @@ d3.json(json_fname, function(error, data_total) {
 		brush.extent(brushInit);
 
 		display();
+
 		
 		function display() {
 			var marks, labels,
@@ -213,28 +214,92 @@ d3.json(json_fname, function(error, data_total) {
 			marks.exit().remove();
 
 			//update the item labels
-			var rotate = -20;
+			// var rotate = -20;
+			function _rotate(rotation) {
+				labels.attr("transform", function(d) { 
+					return "rotate(" + rotation + "," + d.x + "," + d.y + ")"; 
+				});
+			}
+			// constraint relaxation
+			// http://bl.ocks.org/syntagmatic/4053096
+			var alpha = 0.5;
+			var spacing = 15;
+			function relax(labels) {
+				// Move text if overlapping (recursively)
+				var again = false;
+				labels.each(function(d) {
+					// console.log(d3.select(this).attr("x"));
+					var a = this;
+					var da = d3.select(a);
+					var ax = da.attr("x");
+					// console.log(ax);
+					labels.each(function(dd) {
+						var b = this;
+						// if (a == b) {
+						// 	return;
+						// }
+						var db = d3.select(b);
+						var bx = db.attr("x");
+						var deltaX = ax - bx;
+						// console.log(deltaX);
+						// if (Math.abs(deltaX) > spacing) {
+						// 	return;
+						// }
+						if ( (a != b) && Math.abs(deltaX) < spacing) {
+							// console.log(deltaX);
+							// collision detected
+							again = true;
+							var sign = deltaX > 0 ? 1 : -1;
+							// console.log(a);
+							console.log(db.attr("x"));
+							d.x = +ax + (sign*alpha);
+							dd.x = +bx - (sign*alpha);
+							da.attr("x", d.x);
+							db.attr("x", dd.x);
+							// d3.select(this).attr("transform", "translate(500, 0)");
+							console.log(db.attr("x"));
+							// d.x += sign*alpha;
+							// a.x += 1;
+						}
+					});
+				});
+				if (again) {
+					// setTimeout(function() {
+					// 	relax(labels);
+					// }, 2);
+					relax(labels);
+				} else {
+					_rotate(-20);
+					//
+				}
+
+			}
 			labels = itemRects.selectAll("text")
 				.data(visItems, function (d) { return d.id; })
 				// .attr("x", function(d) {return x1(Math.max(d.start, minExtent) + 2);});
-				.attr("x", function(d) {d.x = x1(Math.max(d.start, minExtent)); return d.x;})
-				.attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; });
+				.attr("x", function(d) {d.x = x1(Math.max(d.start, minExtent)); return d.x;});
+				// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; });
 
 			labels.enter().append("text")
 				.text(function(d) {return d.id;})
 				.attr("x", function(d) {d.x = x1(Math.max(d.start, minExtent)); return d.x;})
 				.attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
 				.attr("y", function(d) {d.y = y1(d.lane)+rad; return d.y;})
-				.attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })
+				.attr("class", "titleMain")
 				.attr("text-anchor", "end")
+				// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })
 				.on('mouseover', function(d) {
 						console.log(d.x);
 					});
+
 
 			labels.exit().remove();
 
 			//update axis
 			xAxisMainObj.call(xAxisMain);
+
+			// _rotate(-20);
+			relax(labels);
 
 		}
 });

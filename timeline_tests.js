@@ -2,8 +2,8 @@
 //
 var json_fname = 'Climate_change.json'
 
-d3.json(json_fname, function(error, data) {
-	data.forEach(function(d) {
+d3.json(json_fname, function(error, data_total) {
+	data_total.forEach(function(d) {
 		d.lane = 0;
 		d.id = d.title;
 		// d.start = +d.pubdate.split('-')[0];
@@ -11,23 +11,26 @@ d3.json(json_fname, function(error, data) {
 		d.start = new Date(d.pubdate);
 		d.end = new Date(d.pubdate);
 		d.end = new Date(d.end.setFullYear(d.end.getFullYear()+5));
-	})
-	data = data.sort(function(a, b) {
+	});
+
+	data = data_total.sort(function(a, b) {
 			return d3.descending(a.eigenfactor_score, b.eigenfactor_score); 
 		}).slice(0,25);
 	console.log(data);
+	var minYear = d3.min(data, function(d) { return d.start; }).getFullYear();
+	console.log(minYear);
 	var lanes = ["Climate change"],
 				laneLength = lanes.length,
-			timeBegin = d3.min(data, function(d) { return d.start; }),
+			timeBegin = new Date(String(minYear-1)),
+			// timeBegin = d3.min(data, function(d) { return d.start; }),
 			timeEnd = d3.max(data, function(d) { return d.end; });
-	console.log(timeBegin);
-	console.log(timeEnd);
 
 		var m = [20, 15, 15, 120], //top right bottom left
 			w = 960 - m[1] - m[3],
 			h = 350 - m[0] - m[2],
 			miniHeight = laneLength * 12 + 30,
 			mainHeight = h - miniHeight - 50;
+			console.log(timeBegin);
 
 		//scales
 		// var x = d3.scale.linear()
@@ -43,6 +46,9 @@ d3.json(json_fname, function(error, data) {
 		var y2 = d3.scale.linear()
 				.domain([0, laneLength])
 				.range([0, miniHeight]);
+		var efScale = d3.scale.linear()
+				.domain(d3.extent(data, function(d) { return d.eigenfactor_score; }))
+				.range([0, 5]);
 
 		var chart = d3.select("body")
 					.append("svg")
@@ -90,7 +96,7 @@ d3.json(json_fname, function(error, data) {
 		
 		//mini lanes and texts
 		mini.append("g").selectAll(".laneLines")
-			.data(data)
+			.data(data_total)
 			.enter().append("line")
 			.attr("x1", m[1])
 			.attr("y1", function(d) {return y2(d.lane);})
@@ -131,7 +137,7 @@ d3.json(json_fname, function(error, data) {
 		
 		//mini item rects
 		mini.append("g").selectAll("miniItems")
-			.data(data)
+			.data(data_total)
 			// .enter().append("rect")
 			.enter().append("circle")
 			.attr("class", function(d) {return "miniItem" + d.lane;})
@@ -141,7 +147,9 @@ d3.json(json_fname, function(error, data) {
 			.attr("cy", function(d) {return y2(d.lane + .5) - 5;})
 			// .attr("width", function(d) { return x(d.end) - x(d.start);})
 			// .attr("height", 10);
-			.attr("r", 5);
+			.attr("r", function(d) {
+					return 5 + efScale(d.eigenfactor_score);
+				});
 
 		//mini labels
 		// mini.append("g").selectAll(".miniLabels")
@@ -196,7 +204,9 @@ d3.json(json_fname, function(error, data) {
 				.attr("class", function(d) {return "miniItem" + d.lane;})
 				.attr("cx", function(d) {return x1(d.start);})
 				.attr("cy", function(d) {return y1(d.lane)+ rad;})
-				.attr('r', rad);
+				.attr('r', function(d) {
+						return rad + efScale(d.eigenfactor_score);
+					});
 				// .attr("width", function(d) {return x1(d.end) - x1(d.start);})
 				// .attr("height", function(d) {return .8 * y1(1);});
 
@@ -216,7 +226,10 @@ d3.json(json_fname, function(error, data) {
 				.attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
 				.attr("y", function(d) {d.y = y1(d.lane)+rad; return d.y;})
 				.attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })
-				.attr("text-anchor", "end");
+				.attr("text-anchor", "end")
+				.on('mouseover', function(d) {
+						console.log(d.x);
+					});
 
 			labels.exit().remove();
 

@@ -32,6 +32,13 @@ d3.json(json_fname, function(error, data_total) {
 			mainHeight = h - miniHeight - 50;
 			console.log(timeBegin);
 
+		var stylesBase = {
+			'opacity': .2
+		};
+		var stylesVisible = {
+			'opacity': 1
+		};
+
 		//scales
 		// var x = d3.scale.linear()
 		var x = d3.time.scale()
@@ -136,7 +143,8 @@ d3.json(json_fname, function(error, data_total) {
 							.attr("clip-path", "url(#clip)");
 		
 		//mini item rects
-		mini.append("g").selectAll("miniItems")
+		// note: mouseover events will not play well with the brush
+		var miniItems = mini.append("g").selectAll("miniItems")
 			.data(data_total)
 			// .enter().append("rect")
 			.enter().append("circle")
@@ -149,7 +157,8 @@ d3.json(json_fname, function(error, data_total) {
 			// .attr("height", 10);
 			.attr("r", function(d) {
 					return 5 + efScale(d.eigenfactor_score);
-				});
+				})
+			.style(stylesBase);
 
 		//mini labels
 		// mini.append("g").selectAll(".miniLabels")
@@ -193,6 +202,20 @@ d3.json(json_fname, function(error, data_total) {
 
 			x1.domain([minExtent, maxExtent]);
 
+			// update styles of mini items that are visible in the main display.
+			// reset all to normal, then style just the visible ones
+			// TODO: this isn't working especially well
+			miniItems.style(stylesBase);
+			miniItems.filter(function(d) {
+				var match = false;
+				visItems.forEach(function(dd) {
+					if (d.id==dd.id) {
+						match = true;
+					}
+				});
+				return match;
+				}).style(stylesVisible);
+
 			//update main item marks
 			var rad = 15
 			marks = itemRects.selectAll("circle")
@@ -202,12 +225,13 @@ d3.json(json_fname, function(error, data_total) {
 				// .attr("width", function(d) {return x1(d.end) - x1(d.start);});
 			
 			marks.enter().append("circle")
-				.attr("class", function(d) {return "miniItem" + d.lane;})
+				.attr("class", function(d) {return "mainItem miniItem" + d.lane;})
 				.attr("cx", function(d) {return x1(d.start);})
 				.attr("cy", function(d) {return y1(d.lane)+ rad;})
 				.attr('r', function(d) {
 						return rad + efScale(d.eigenfactor_score);
-					});
+					})
+				.style(stylesVisible);
 				// .attr("width", function(d) {return x1(d.end) - x1(d.start);})
 				// .attr("height", function(d) {return .8 * y1(1);});
 
@@ -222,7 +246,7 @@ d3.json(json_fname, function(error, data_total) {
 			}
 			// constraint relaxation
 			// http://bl.ocks.org/syntagmatic/4053096
-			var alpha = 0.5;
+			var alpha = 1;
 			var spacing = 15;
 			function relax(labels) {
 				// Move text if overlapping (recursively)
@@ -251,13 +275,13 @@ d3.json(json_fname, function(error, data_total) {
 							again = true;
 							var sign = deltaX > 0 ? 1 : -1;
 							// console.log(a);
-							console.log(db.attr("x"));
+							// console.log(db.attr("x"));
 							d.x = +ax + (sign*alpha);
 							dd.x = +bx - (sign*alpha);
 							da.attr("x", d.x);
 							db.attr("x", dd.x);
 							// d3.select(this).attr("transform", "translate(500, 0)");
-							console.log(db.attr("x"));
+							// console.log(db.attr("x"));
 							// d.x += sign*alpha;
 							// a.x += 1;
 						}

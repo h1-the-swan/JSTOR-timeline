@@ -195,7 +195,7 @@ d3.json(json_fname, function(error, data_total) {
 			var marks, labels,
 				minExtent = brush.extent()[0],
 				maxExtent = brush.extent()[1],
-				visItems = data.filter(function(d) {return d.start < maxExtent && d.end > minExtent;});
+				visItems = data.filter(function(d) {return d.start < maxExtent && d.start > minExtent;});
 
 			mini.select(".brush")
 				.call(brush.extent([minExtent, maxExtent]));
@@ -204,7 +204,6 @@ d3.json(json_fname, function(error, data_total) {
 
 			// update styles of mini items that are visible in the main display.
 			// reset all to normal, then style just the visible ones
-			// TODO: this isn't working especially well
 			miniItems.style(stylesBase);
 			miniItems.filter(function(d) {
 				var match = false;

@@ -8,21 +8,23 @@ d3.json(json_fname, function(error, data_total) {
 		d.id = d.title;
 		// d.start = +d.pubdate.split('-')[0];
 		// d.end = d.start + 1;
-		d.start = new Date(d.pubdate);
-		d.end = new Date(d.pubdate);
-		d.end = new Date(d.end.setFullYear(d.end.getFullYear()+5));
+		// d.start = new Date(d.pubdate);
+		// d.end = new Date(d.pubdate);
+		// d.end = new Date(d.end.setFullYear(d.end.getFullYear()+5));
+		d.start = d.year;
+		d.end = d.year+1;
 	});
 
 	data = data_total.sort(function(a, b) {
 			return d3.descending(a.eigenfactor_score, b.eigenfactor_score); 
 		}).slice(0,25);
 	console.log(data);
-	var minYear = d3.min(data, function(d) { return d.start; }).getFullYear();
-	console.log(minYear);
+	// var minYear = d3.min(data, function(d) { return d.start; }).getFullYear();
+	// console.log(minYear);
 	var lanes = ["Climate change"],
 				laneLength = lanes.length,
-			timeBegin = new Date(String(minYear-1)),
-			// timeBegin = d3.min(data, function(d) { return d.start; }),
+			// timeBegin = new Date(String(minYear-1)),
+			timeBegin = d3.min(data, function(d) { return d.start; }),
 			timeEnd = d3.max(data, function(d) { return d.end; });
 
 		var m = [20, 15, 15, 120], //top right bottom left
@@ -40,12 +42,12 @@ d3.json(json_fname, function(error, data_total) {
 		};
 
 		//scales
-		// var x = d3.scale.linear()
-		var x = d3.time.scale()
+		var x = d3.scale.linear()
+		// var x = d3.time.scale()
 				.domain([timeBegin, timeEnd])
 				.range([0, w]);
-		// var x1 = d3.scale.linear()
-		var x1 = d3.time.scale()
+		var x1 = d3.scale.linear()
+		// var x1 = d3.time.scale()
 				.range([0, w]);
 		var y1 = d3.scale.linear()
 				.domain([0, laneLength])
@@ -152,13 +154,38 @@ d3.json(json_fname, function(error, data_total) {
 			// .attr("x", function(d) {return x(d.start);})
 			// .attr("y", function(d) {return y2(d.lane + .5) - 5;})
 			.attr("cx", function(d) {return x(d.start);})
-			.attr("cy", function(d) {return y2(d.lane + .5) - 5;})
+			// .attr("cy", function(d) {return y2(d.lane + .5) - 5;})
 			// .attr("width", function(d) { return x(d.end) - x(d.start);})
 			// .attr("height", 10);
 			.attr("r", function(d) {
-					return 5 + efScale(d.eigenfactor_score);
+					d.radius = 5 + efScale(d.eigenfactor_score);
+					return d.radius;
 				})
 			.style(stylesBase);
+
+		function stackItems(items, scale) {
+			var yearsList = [];
+			items.each(function(d) {
+				if ( !(d.year in yearsList) ) {
+					yearsList.push(d.year);
+				}
+			});
+			var maxRad = d3.max(items[0], function(d) {return d.__data__.radius});
+			for (var i = 0, len = yearsList.length; i < len; i++) {
+				thisYearMini = items.filter(function(d) {return d.year==yearsList[i]});
+				var cy = 0;
+				thisYearMini.each(function(d) {
+					if (cy == 0) {
+						cy = scale(d.lane) + maxRad;
+					} else {
+						cy = cy + 2*d.radius;
+					}
+					d.cy = cy;
+					d3.select(this).attr("cy", cy)
+				});
+			}
+		}
+		stackItems(miniItems, y2);
 
 		//mini labels
 		// mini.append("g").selectAll(".miniLabels")
@@ -183,8 +210,9 @@ d3.json(json_fname, function(error, data_total) {
 
 		// initialize brush
 		var brushInit = [
-			new Date("1970-01-01"),
-			new Date("1995-01-01")
+			// new Date("1970-01-01"),
+			// new Date("1995-01-01")
+			1970, 1995
 			];
 		brush.extent(brushInit);
 
@@ -216,8 +244,8 @@ d3.json(json_fname, function(error, data_total) {
 				}).style(stylesVisible);
 
 			//update main item marks
-			var rad = 15
-			marks = itemRects.selectAll("circle")
+			var rad = 15;
+			var marks = itemRects.selectAll("circle")
 			        .data(visItems, function(d) { return d.id; })
 				.attr("cx", function(d) {return x1(d.start);});
 				// .attr("x", function(d) {return x1(d.start);})
@@ -225,16 +253,18 @@ d3.json(json_fname, function(error, data_total) {
 			
 			marks.enter().append("circle")
 				.attr("class", function(d) {return "mainItem miniItem" + d.lane;})
-				.attr("cx", function(d) {return x1(d.start);})
+				.attr("cx", function(d) {return d.cx = x1(d.start);})
 				.attr("cy", function(d) {return y1(d.lane)+ rad;})
 				.attr('r', function(d) {
-						return rad + efScale(d.eigenfactor_score);
+						d.radius = rad + efScale(d.eigenfactor_score);
+						return d.radius;
 					})
 				.style(stylesVisible);
 				// .attr("width", function(d) {return x1(d.end) - x1(d.start);})
 				// .attr("height", function(d) {return .8 * y1(1);});
 
 			marks.exit().remove();
+			stackItems(marks, y1);
 
 			//update the item labels
 			// var rotate = -20;
@@ -306,8 +336,9 @@ d3.json(json_fname, function(error, data_total) {
 			labels.enter().append("text")
 				.text(function(d) {return d.id;})
 				.attr("x", function(d) {d.x = x1(Math.max(d.start, minExtent)); return d.x;})
-				.attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
-				.attr("y", function(d) {d.y = y1(d.lane)+rad; return d.y;})
+				// .attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
+				// .attr("y", function(d) {d.y = y1(d.lane)+rad; return d.y;})
+				.attr("y", function(d) {return d.y = d.cy;})
 				.attr("class", "titleMain")
 				.attr("text-anchor", "end")
 				// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })
@@ -321,8 +352,8 @@ d3.json(json_fname, function(error, data_total) {
 			//update axis
 			xAxisMainObj.call(xAxisMain);
 
-			// _rotate(-20);
-			relax(labels);
+			_rotate(-20);
+			// relax(labels);
 
 		}
 });

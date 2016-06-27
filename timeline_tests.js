@@ -126,7 +126,8 @@ d3.json(json_fname, function(error, data_total) {
 		var xAxisMini = d3.svg.axis()
 			.orient("bottom")
 			// .ticks(5)
-			.scale(x);
+			.scale(x)
+			.tickFormat(d3.format("d"));
 
 		mini.append("g")
 			.attr("class", "xaxis")
@@ -135,7 +136,8 @@ d3.json(json_fname, function(error, data_total) {
 
 		var xAxisMain = d3.svg.axis()
 			.orient("top")
-			.scale(x1);
+			.scale(x1)
+			.tickFormat(d3.format("d"));
 
 		var xAxisMainObj = main.append("g")
 			.attr("class", "xaxis")

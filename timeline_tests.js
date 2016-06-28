@@ -246,7 +246,7 @@ d3.json(json_fname, function(error, data_total) {
 				}).style(stylesVisible);
 
 			//update main item marks
-			var rad = 15;
+			var rad = 10;
 			var marks = itemRects.selectAll("circle")
 			        .data(visItems, function(d) { return d.id; })
 				.attr("cx", function(d) {return x1(d.start);});
@@ -258,7 +258,7 @@ d3.json(json_fname, function(error, data_total) {
 				.attr("cx", function(d) {return d.cx = x1(d.start);})
 				.attr("cy", function(d) {return y1(d.lane)+ rad;})
 				.attr('r', function(d) {
-						d.radius = rad + efScale(d.eigenfactor_score);
+						d.radius = rad + (2 * efScale(d.eigenfactor_score));
 						return d.radius;
 					})
 				.style(stylesVisible);

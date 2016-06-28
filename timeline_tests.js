@@ -271,8 +271,22 @@ d3.json(json_fname, function(error, data_total) {
 			//update the item labels
 			// var rotate = -20;
 			function _rotate(rotation) {
+				// labels.attr("transform", function(d) { 
 				labels.attr("transform", function(d) { 
-					return "rotate(" + rotation + "," + d.x + "," + d.y + ")"; 
+					console.log(d3.select(this).attr("transform"));
+					var currentTransform = d3.select(this).attr("transform");
+					if (currentTransform == undefined) {
+						console.log(d3.select(this));
+					} else {
+						console.log(d3.select(this));
+					}
+					// if (currentTransform.indexOf("rotate") > -1) {
+					// 	return currentTransform;
+					// } else {
+					// 	return currentTransform + " rotate(" + rotation + ")";
+					// }
+					// return "translate(" + d.cx + "," + d.cy + ") rotate(" + rotation + "," + d.cx + "," + d.cy + ")"; 
+					return "translate(" + d.cx + "," + d.cy + ") rotate(" + rotation +  ")"; 
 				});
 			}
 			// constraint relaxation
@@ -329,24 +343,65 @@ d3.json(json_fname, function(error, data_total) {
 				}
 
 			}
-			labels = itemRects.selectAll("text")
+			labels = itemRects.selectAll(".textG")
 				.data(visItems, function (d) { return d.id; })
 				// .attr("x", function(d) {return x1(Math.max(d.start, minExtent) + 2);});
-				.attr("x", function(d) {d.x = x1(Math.max(d.start, minExtent)); return d.x;});
+				// .attr("x", function(d) {d.x = x1(Math.max(d.start, minExtent)); return d.x;});
 				// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; });
+			labels.enter().append("g")
+				.attr("class", "textG")
+				.attr("transform", function(d) {d.x=x1(Math.max(d.start, minExtent)); return "translate(" + x1(d.start) + "," + d.cy + ")";});
+				// .attr("dx", function(d) {d.x = x1(Math.max(d.start, minExtent)); return d.x;})
+				// .attr("dy", function(d) {return d.y = d.cy;});
 
-			labels.enter().append("text")
-				.text(function(d) {return d.id;})
-				.attr("x", function(d) {d.x = x1(Math.max(d.start, minExtent)); return d.x;})
-				// .attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
-				// .attr("y", function(d) {d.y = y1(d.lane)+rad; return d.y;})
-				.attr("y", function(d) {return d.y = d.cy;})
-				.attr("class", "titleMain")
-				.attr("text-anchor", "end")
-				// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })
-				.on('mouseover', function(d) {
-						console.log(d.x);
-					});
+			// labels.enter().append("text")
+			var labelsText = labels.append("text")
+				// .attr("text-anchor", "end")
+				.text(null)
+				.each(function(d) {
+					// var arr = d.id.split(" ");
+					var textToBreak = d.id;
+					var textlines = [];
+					var lineBreakCutoff = 30;
+					while (true) {
+						console.log(textToBreak);
+						if (textToBreak.length>lineBreakCutoff) {
+							var idx = textToBreak.indexOf(" ", lineBreakCutoff);
+							if (idx > -1) {
+								textlines.push(textToBreak.slice(0,idx));
+								textlines.push(textToBreak.slice(idx+1));
+								textToBreak = textToBreak.slice(idx+1);
+							} else {
+								break;
+							}
+							// console.log(textToBreak);
+							// break;
+						} else {
+							break;
+						}
+					}
+					if (textlines != []) {
+						for (var i = 0, len = textlines.length; i < len; i++) {
+							d3.select(this).append("tspan")
+								.text(textlines[i])
+								.attr("dy", i ? "1.2em" : 0)
+								.attr("x", 0)
+								.attr("text-anchor", "end");
+						}
+					}
+				});
+			// labels.append("text")
+			// 	.text(function(d) {return d.id;})
+			// 	.attr("x", function(d) {d.x = x1(Math.max(d.start, minExtent)); return d.x;})
+			// 	// .attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
+			// 	// .attr("y", function(d) {d.y = y1(d.lane)+rad; return d.y;})
+			// 	.attr("y", function(d) {return d.y = d.cy;})
+			// 	.attr("class", "titleMain")
+			// 	.attr("text-anchor", "end")
+			// 	// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })
+			// 	.on('mouseover', function(d) {
+			// 			console.log(d.x);
+			// 		});
 
 
 			labels.exit().remove();

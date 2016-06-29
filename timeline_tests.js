@@ -14,6 +14,11 @@ d3.json(json_fname, function(error, data_total) {
 		d.start = d.year;
 		d.end = d.year+1;
 	});
+	var dataByYear = d3.nest()
+						.key(function(d) {return d.year;})
+						.sortValues(function(a, b) {return d3.descending(a.eigenfactor_score, b.eigenfactor_score);})
+						.map(data_total, d3.map);
+	console.log(dataByYear);
 
 	data = data_total.sort(function(a, b) {
 			return d3.descending(a.eigenfactor_score, b.eigenfactor_score); 

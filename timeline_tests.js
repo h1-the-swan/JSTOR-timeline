@@ -17,13 +17,17 @@ d3.json(json_fname, function(error, data_total) {
 	var dataByYear = d3.nest()
 						.key(function(d) {return d.year;})
 						.sortValues(function(a, b) {return d3.descending(a.eigenfactor_score, b.eigenfactor_score);})
-						.map(data_total, d3.map);
-	console.log(dataByYear);
+						// .map(data_total, d3.map);
+						.entries(data_total);
+	dataByYear.forEach(function(d) {
+		d.firstTitle = d.values[0].id;
+		d.sum_eigenfactor = d3.sum(d.values, function(dd) {return dd.eigenfactor_score;});
+		d.lane = 0;
+	});
 
 	data = data_total.sort(function(a, b) {
 			return d3.descending(a.eigenfactor_score, b.eigenfactor_score); 
 		}).slice(0,25);
-	console.log(data);
 	// var minYear = d3.min(data, function(d) { return d.start; }).getFullYear();
 	// console.log(minYear);
 	var lanes = ["Climate change"],
@@ -37,7 +41,6 @@ d3.json(json_fname, function(error, data_total) {
 			h = 350 - m[0] - m[2],
 			miniHeight = laneLength * 12 + 30,
 			mainHeight = h - miniHeight - 50;
-			console.log(timeBegin);
 
 		var stylesBase = {
 			'opacity': .2
@@ -63,6 +66,10 @@ d3.json(json_fname, function(error, data_total) {
 		var efScale = d3.scale.linear()
 				.domain(d3.extent(data, function(d) { return d.eigenfactor_score; }))
 				.range([0, 5]);
+		var efSumScale = d3.scale.linear()
+				.domain(d3.extent(dataByYear, function(d) { return d.sum_eigenfactor; }))
+				.range([0, 5]);
+		console.log(d3.extent(dataByYear, function(d) { return d.sum_eigenfactor; }))
 
 		var chart = d3.select("body")
 					.append("svg")
@@ -230,10 +237,12 @@ d3.json(json_fname, function(error, data_total) {
 			var marks, labels,
 				minExtent = brush.extent()[0],
 				maxExtent = brush.extent()[1],
-				visItems = data.filter(function(d) {return d.start < maxExtent && d.start > minExtent;});
+				// visItems = data.filter(function(d) {return d.start < maxExtent && d.start > minExtent;});
+				visItems = dataByYear.filter(function(d) {return d.key < maxExtent && d.key > minExtent;});
 
 			mini.select(".brush")
 				.call(brush.extent([minExtent, maxExtent]));
+			console.log(maxExtent-minExtent);
 
 			x1.domain([minExtent, maxExtent]);
 
@@ -243,7 +252,7 @@ d3.json(json_fname, function(error, data_total) {
 			miniItems.filter(function(d) {
 				var match = false;
 				visItems.forEach(function(dd) {
-					if (d.id==dd.id) {
+					if (d.id==dd.firstTitle) {
 						match = true;
 					}
 				});
@@ -252,26 +261,29 @@ d3.json(json_fname, function(error, data_total) {
 
 			//update main item marks
 			var rad = 10;
-			var marks = itemRects.selectAll("circle")
-			        .data(visItems, function(d) { return d.id; })
-				.attr("cx", function(d) {return x1(d.start);});
+			marks = itemRects.selectAll("circle")
+			        // .data(visItems, function(d) { return d.id; })
+			        .data(visItems)
+				.attr("cx", function(d) {return x1(+d.key);});
 				// .attr("x", function(d) {return x1(d.start);})
 				// .attr("width", function(d) {return x1(d.end) - x1(d.start);});
 			
 			marks.enter().append("circle")
 				.attr("class", function(d) {return "mainItem miniItem" + d.lane;})
-				.attr("cx", function(d) {return d.cx = x1(d.start);})
-				.attr("cy", function(d) {return y1(d.lane)+ rad;})
+				.attr("cx", function(d) {return d.cx = x1(+d.key);})
+				.attr("cy", function(d) {return d.cy = y1(d.lane)+ rad;})
 				.attr('r', function(d) {
-						d.radius = rad + (2 * efScale(d.eigenfactor_score));
+						// d.radius = rad + (2 * efSumScale(d.sum_eigenfactor));
+						d.radius = rad;
 						return d.radius;
 					})
+				.on('mouseover', expand)
 				.style(stylesVisible);
 				// .attr("width", function(d) {return x1(d.end) - x1(d.start);})
 				// .attr("height", function(d) {return .8 * y1(1);});
 
 			marks.exit().remove();
-			stackItems(marks, y1);
+			// stackItems(marks, y1);
 
 			//update the item labels
 			// var rotate = -20;
@@ -334,33 +346,56 @@ d3.json(json_fname, function(error, data_total) {
 				}
 
 			}
-			labels = itemRects.selectAll("text")
-				.data(visItems, function (d) { return d.id; })
-				// .attr("x", function(d) {return x1(Math.max(d.start, minExtent) + 2);});
-				.attr("x", function(d) {d.x = x1(Math.max(d.start, minExtent)); return d.x;});
-				// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; });
-
-			labels.enter().append("text")
-				.text(function(d) {return d.id;})
-				.attr("x", function(d) {d.x = x1(Math.max(d.start, minExtent)); return d.x;})
-				// .attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
-				// .attr("y", function(d) {d.y = y1(d.lane)+rad; return d.y;})
-				.attr("y", function(d) {return d.y = d.cy;})
-				.attr("class", "titleMain")
-				.attr("text-anchor", "end")
-				// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })
-				.on('mouseover', function(d) {
-						console.log(d.x);
-					});
-
-
-			labels.exit().remove();
+			// labels = itemRects.selectAll("text")
+			// 	.data(visItems, function (d) { return d.id; })
+			// 	// .attr("x", function(d) {return x1(Math.max(d.start, minExtent) + 2);});
+			// 	.attr("x", function(d) {d.x = x1(Math.max(d.key, minExtent)); return d.x;});
+			// 	// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; });
+            //
+			// labels.enter().append("text")
+			// 	.text(function(d) {return d.id;})
+			// 	.attr("x", function(d) {d.x = x1(Math.max(d.key, minExtent)); return d.x;})
+			// 	// .attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
+			// 	// .attr("y", function(d) {d.y = y1(d.lane)+rad; return d.y;})
+			// 	.attr("y", function(d) {return d.y = d.cy;})
+			// 	.attr("class", "titleMain")
+			// 	.attr("text-anchor", "end")
+			// 	// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })
+			// 	.on('mouseover', function(d) {
+			// 			console.log(d.x);
+			// 		});
+            //
+            //
+			// labels.exit().remove();
 
 			//update axis
 			xAxisMainObj.call(xAxisMain);
 
-			_rotate(-20);
+			// _rotate(-20);
 			// relax(labels);
 
 		}
+	
+	function expand(yearData) {
+		var rad = yearData.radius;
+		var parentY = yearData.cy;
+		var marks = itemRects.selectAll(".yearItem")
+			        // .data(visItems, function(d) { return d.id; })
+			        .data(yearData.values)
+				.attr("cx", function(d) {return x1(+d.year);});
+			marks.enter().append("circle")
+				// .attr("class", function(d) {return "mainItem miniItem" + d.lane;})
+				.attr("class", "yearItem")
+				.attr('r', function(d) {
+						// d.radius = rad + (2 * efSumScale(d.sum_eigenfactor));
+						d.radius = rad;
+						return d.radius;
+					})
+				.attr("cx", function(d) {return d.cx = x1(+d.year);})
+				.attr("cy", parentY)
+				.transition().duration(1000)
+				.attr("cy", function(d, i) {return d.cy = y1(d.lane)+ rad*i+20;})
+				.style(stylesVisible);
+		marks.exit().transition().duration(1000).attr("cy", parentY).remove();
+	}
 });

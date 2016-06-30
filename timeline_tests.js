@@ -377,13 +377,13 @@ d3.json(json_fname, function(error, data_total) {
 		}
 	
 	function expand(yearData) {
+		var dur = 50;
 		var rad = yearData.radius;
 		var parentY = yearData.cy;
 		var marks = itemRects.selectAll(".yearItem")
 			        // .data(visItems, function(d) { return d.id; })
-			        .data(yearData.values)
-				.attr("cx", function(d) {return x1(+d.year);});
-			marks.enter().append("circle")
+			        .data(yearData.values);
+		marks.enter().append("circle")
 				// .attr("class", function(d) {return "mainItem miniItem" + d.lane;})
 				.attr("class", "yearItem")
 				.attr('r', function(d) {
@@ -391,11 +391,14 @@ d3.json(json_fname, function(error, data_total) {
 						d.radius = rad;
 						return d.radius;
 					})
-				.attr("cx", function(d) {return d.cx = x1(+d.year);})
-				.attr("cy", parentY)
-				.transition().duration(1000)
-				.attr("cy", function(d, i) {return d.cy = y1(d.lane)+ rad*i+20;})
+				.on('mouseover', function(d) {console.log(d);});
+		// marks.exit().transition().duration(1000).attr("cy", parentY).remove();
+		// itemRects.selectAll('text').data(yearData.values).enter().append('text').attr("x", function(d) {console.log(d); return d.cx;}).attr("y", function(d) {return d.cy;}).text(function(d) {return d.title;});
+		marks.exit().remove();
+		marks.attr("cx", function(d) {return d.cx = x1(+d.year);})
+				.attr("cy", parentY+rad)
+				.transition().duration(dur)
+				.attr("cy", function(d, i) {return d.cy = y1(d.lane)+ 2.2*rad*i+4*rad;})
 				.style(stylesVisible);
-		marks.exit().transition().duration(1000).attr("cy", parentY).remove();
 	}
 });

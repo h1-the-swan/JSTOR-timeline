@@ -377,28 +377,48 @@ d3.json(json_fname, function(error, data_total) {
 		}
 	
 	function expand(yearData) {
-		var dur = 50;
+		var dur = 500;
 		var rad = yearData.radius;
 		var parentY = yearData.cy;
+		var beforeTransitionX = function(d) {
+			return x1(+d.year);
+		};
+		var beforeTransitionY = parentY+rad;
+		var afterTransitionY = function(d, i) {
+			return y1(d.lane) + 2.2*rad*i+4*rad;
+		};
 		var marks = itemRects.selectAll(".yearItem")
 			        // .data(visItems, function(d) { return d.id; })
 			        .data(yearData.values);
 		marks.enter().append("circle")
 				// .attr("class", function(d) {return "mainItem miniItem" + d.lane;})
 				.attr("class", "yearItem")
+				.on('mouseover', function(d) {console.log(d);}).append('text').text('d');
+		// marks.exit().transition().duration(1000).attr("cy", parentY).remove();
+		// itemRects.selectAll('text').data(yearData.values).enter().append('text').attr("x", function(d) {console.log(d); return d.cx;}).attr("y", function(d) {return d.cy;}).text(function(d) {return d.title;});
+		marks.exit().remove();
+
+		var labels = itemRects.selectAll(".yearItemLabel")
+			.data(yearData.values);
+		labels.enter().append("text")
+			.attr("class", "yearItemLabel")
+			.attr("text-anchor", "end");
+		labels.exit().remove();
+
+		marks.attr("cx", beforeTransitionX)
 				.attr('r', function(d) {
 						// d.radius = rad + (2 * efSumScale(d.sum_eigenfactor));
 						d.radius = rad;
 						return d.radius;
 					})
-				.on('mouseover', function(d) {console.log(d);});
-		// marks.exit().transition().duration(1000).attr("cy", parentY).remove();
-		// itemRects.selectAll('text').data(yearData.values).enter().append('text').attr("x", function(d) {console.log(d); return d.cx;}).attr("y", function(d) {return d.cy;}).text(function(d) {return d.title;});
-		marks.exit().remove();
-		marks.attr("cx", function(d) {return d.cx = x1(+d.year);})
-				.attr("cy", parentY+rad)
+				.attr("cy", beforeTransitionY)
 				.transition().duration(dur)
-				.attr("cy", function(d, i) {return d.cy = y1(d.lane)+ 2.2*rad*i+4*rad;})
+				.attr("cy", afterTransitionY)
 				.style(stylesVisible);
+		labels.attr("x", beforeTransitionX)
+			.text(function(d) {return d.title;})
+			.attr("y", beforeTransitionY)
+			.transition().duration(dur)
+			.attr("y", afterTransitionY);
 	}
 });

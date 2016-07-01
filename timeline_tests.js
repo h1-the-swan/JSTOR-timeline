@@ -23,6 +23,7 @@ d3.json(json_fname, function(error, data_total) {
 		d.firstTitle = d.values[0].id;
 		d.sum_eigenfactor = d3.sum(d.values, function(dd) {return dd.eigenfactor_score;});
 		d.lane = 0;
+		d.year = d.key;
 	});
 
 	data = data_total.sort(function(a, b) {
@@ -238,7 +239,7 @@ d3.json(json_fname, function(error, data_total) {
 				minExtent = brush.extent()[0],
 				maxExtent = brush.extent()[1],
 				// visItems = data.filter(function(d) {return d.start < maxExtent && d.start > minExtent;});
-				visItems = dataByYear.filter(function(d) {return d.key < maxExtent && d.key > minExtent;});
+				visItems = dataByYear.filter(function(d) {return d.year < maxExtent && d.year > minExtent;});
 
 			mini.select(".brush")
 				.call(brush.extent([minExtent, maxExtent]));
@@ -261,16 +262,16 @@ d3.json(json_fname, function(error, data_total) {
 
 			//update main item marks
 			var rad = 10;
-			marks = itemRects.selectAll("circle")
+			marks = itemRects.selectAll(".yearItem")
+				.attr("cx", function(d) {return x1(+d.year);})
 			        // .data(visItems, function(d) { return d.id; })
-			        .data(visItems)
-				.attr("cx", function(d) {return x1(+d.key);});
+			        .data(visItems);
 				// .attr("x", function(d) {return x1(d.start);})
 				// .attr("width", function(d) {return x1(d.end) - x1(d.start);});
 			
 			marks.enter().append("circle")
-				.attr("class", function(d) {return "mainItem miniItem" + d.lane;})
-				.attr("cx", function(d) {return d.cx = x1(+d.key);})
+				.attr("class", "yearItem mainItem")
+				.attr("cx", function(d) {return d.cx = x1(+d.year);})
 				.attr("cy", function(d) {return d.cy = y1(d.lane)+ rad;})
 				.attr('r', function(d) {
 						// d.radius = rad + (2 * efSumScale(d.sum_eigenfactor));
@@ -278,12 +279,18 @@ d3.json(json_fname, function(error, data_total) {
 						return d.radius;
 					})
 				.on('mouseover', expand)
+				.on('mouseout', function() {$('.yearItemLabel').show();})
 				.style(stylesVisible);
 				// .attr("width", function(d) {return x1(d.end) - x1(d.start);})
 				// .attr("height", function(d) {return .8 * y1(1);});
 
 			marks.exit().remove();
 			// stackItems(marks, y1);
+			//
+			var paperItems = itemRects.selectAll(".paperItem")
+				.attr("cx", function(d) {return x1(+d.year);});
+			var paperItemLabels = itemRects.selectAll(".paperItemLabel")
+				.attr("x", function(d) {return x1(+d.year);});
 
 			//update the item labels
 			// var rotate = -20;
@@ -346,62 +353,67 @@ d3.json(json_fname, function(error, data_total) {
 				}
 
 			}
-			// labels = itemRects.selectAll("text")
-			// 	.data(visItems, function (d) { return d.id; })
-			// 	// .attr("x", function(d) {return x1(Math.max(d.start, minExtent) + 2);});
-			// 	.attr("x", function(d) {d.x = x1(Math.max(d.key, minExtent)); return d.x;});
-			// 	// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; });
-            //
-			// labels.enter().append("text")
-			// 	.text(function(d) {return d.id;})
-			// 	.attr("x", function(d) {d.x = x1(Math.max(d.key, minExtent)); return d.x;})
-			// 	// .attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
-			// 	// .attr("y", function(d) {d.y = y1(d.lane)+rad; return d.y;})
-			// 	.attr("y", function(d) {return d.y = d.cy;})
-			// 	.attr("class", "titleMain")
-			// 	.attr("text-anchor", "end")
-			// 	// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })
-			// 	.on('mouseover', function(d) {
-			// 			console.log(d.x);
-			// 		});
-            //
-            //
-			// labels.exit().remove();
+			labels = itemRects.selectAll(".yearItemLabel")
+				.attr("x", function(d) {d.x = x1(Math.max(d.key, minExtent)); return d.x;})
+				.data(visItems);
+				// .attr("x", function(d) {return x1(Math.max(d.start, minExtent) + 2);});
+				// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; });
+
+			labels.enter().append("text")
+				.text(function(d) {return d.year + ": " + d.values.length + " papers";})
+				.attr("x", function(d) {d.x = x1(Math.max(d.key, minExtent)); return d.x;})
+				// .attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
+				// .attr("y", function(d) {d.y = y1(d.lane)+rad; return d.y;})
+				.attr("y", function(d) {return d.y = d.cy;})
+				.attr("class", "yearItemLabel")
+				.attr("text-anchor", "end")
+				// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })
+				.on('mouseover', function(d) {
+						console.log(d.x);
+					});
+
+
+			labels.exit().remove();
 
 			//update axis
 			xAxisMainObj.call(xAxisMain);
 
-			// _rotate(-20);
+			_rotate(-20);
 			// relax(labels);
 
 		}
 	
 	function expand(yearData) {
+		// d3.selectAll(".yearItemLabel").classed("hidden");
+		$( '.yearItemLabel' ).hide();
 		var dur = 500;
 		var rad = yearData.radius;
 		var parentY = yearData.cy;
 		var beforeTransitionX = function(d) {
 			return x1(+d.year);
 		};
+		var afterTransitionX = function(d, i) {
+			return x1(+d.year) + ((i*i)*3);
+		};
 		var beforeTransitionY = parentY+rad;
 		var afterTransitionY = function(d, i) {
-			return y1(d.lane) + 2.2*rad*i+4*rad;
+			return y1(d.lane) + 2.2*rad*i+5*rad;
 		};
-		var marks = itemRects.selectAll(".yearItem")
+		var marks = itemRects.selectAll(".paperItem")
 			        // .data(visItems, function(d) { return d.id; })
 			        .data(yearData.values);
 		marks.enter().append("circle")
 				// .attr("class", function(d) {return "mainItem miniItem" + d.lane;})
-				.attr("class", "yearItem")
+				.attr("class", "paperItem")
 				.on('mouseover', function(d) {console.log(d);}).append('text').text('d');
 		// marks.exit().transition().duration(1000).attr("cy", parentY).remove();
 		// itemRects.selectAll('text').data(yearData.values).enter().append('text').attr("x", function(d) {console.log(d); return d.cx;}).attr("y", function(d) {return d.cy;}).text(function(d) {return d.title;});
 		marks.exit().remove();
 
-		var labels = itemRects.selectAll(".yearItemLabel")
+		var labels = itemRects.selectAll(".paperItemLabel")
 			.data(yearData.values);
 		labels.enter().append("text")
-			.attr("class", "yearItemLabel")
+			.attr("class", "paperItemLabel")
 			.attr("text-anchor", "end");
 		labels.exit().remove();
 
@@ -413,12 +425,14 @@ d3.json(json_fname, function(error, data_total) {
 					})
 				.attr("cy", beforeTransitionY)
 				.transition().duration(dur)
+				.attr("cx", afterTransitionX)
 				.attr("cy", afterTransitionY)
 				.style(stylesVisible);
 		labels.attr("x", beforeTransitionX)
 			.text(function(d) {return d.title;})
 			.attr("y", beforeTransitionY)
 			.transition().duration(dur)
+			.attr("x", afterTransitionX)
 			.attr("y", afterTransitionY);
 	}
 });

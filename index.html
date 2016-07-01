@@ -4,6 +4,7 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width">
 		<title>D3 Timeline Test</title>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 		<!-- <script src="https://d3js.org/d3.v3.min.js" charset="utf&#45;8"></script> -->
 		<script src="d3.v3.js" charset="utf-8"></script>
 		<style type="text/css">
@@ -20,19 +21,29 @@
 			font: 10px sans-serif;	
 			/* visibility: hidden; */
 		}
+		g {
+			overflow: visible;
+		}
 		text:hover{
 			font: 1em sans-serif;	
 		}
 
-		.miniItem0 {
+		.miniItem0, .yearItem {
 			fill: darksalmon;
 			fill-opacity: .7;
 			stroke-width: 6;	
 		}
+		.yearItem:hover {
+			fill: blue;
+		}
 
-		.miniItem1 {
-			fill: darkolivegreen;
-			fill-opacity: .7;
+		.yearItemLabel {
+			pointer-events: none;
+		}
+
+		.paperItem {
+			fill: blue;
+			fill-opacity: .5;
 			stroke-width: 6;	
 		}
 

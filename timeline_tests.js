@@ -288,7 +288,8 @@ d3.json(json_fname, function(error, data_total) {
 						return d.radius;
 					})
 				.on('mouseover', expand)
-				.on('mouseout', function() {$('.yearItemLabel').show();})
+				// .on('mouseout', function() {$('.yearItemLabel').show();})
+				.on('mouseout', contract)
 				.style(stylesVisible);
 				// .attr("width", function(d) {return x1(d.end) - x1(d.start);})
 				// .attr("height", function(d) {return .8 * y1(1);});
@@ -364,87 +365,126 @@ d3.json(json_fname, function(error, data_total) {
 				}
 
 			}
-			labels = itemRects.selectAll(".yearItemLabel")
-				.attr("x", function(d) {d.x = x1(Math.max(d.key, minExtent)); return d.x;})
-				.attr("y", function(d) {d.y = d.cy; return d.y;})
+			// labels = itemRects.selectAll(".yearItemLabel")
+			// 	.attr("x", function(d) {d.x = x1(Math.max(d.key, minExtent)); return d.x;})
+			// 	.attr("y", function(d) {d.y = d.cy; return d.y;})
+			// 	.data(visItems);
+			// 	// .attr("x", function(d) {return x1(Math.max(d.start, minExtent) + 2);});
+			// 	// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; });
+            //
+			// labels.enter().append("text")
+			// 	.text(function(d) {return d.year + ": " + d.values.length + " papers";})
+			// 	.attr("x", function(d) {d.x = x1(Math.max(d.key, minExtent)); return d.x;})
+			// 	// .attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
+			// 	// .attr("y", function(d) {d.y = y1(d.lane)+rad; return d.y;})
+			// 	.attr("y", function(d) {d.y = d.cy; return d.y;})
+			// 	.attr("class", "yearItemLabel")
+			// 	.attr("text-anchor", "end")
+			// 	// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })
+			// 	.on('mouseover', function(d) {
+			// 			console.log(d.x);
+			// 		});
+            //
+            //
+			// labels.exit().remove();
+
+			var numIndicators = itemRects.selectAll(".numIndicator")
+				.attr("x", function(d) {return x1(+d.year);})
+				.attr("y", function(d) {return y1(d.lane)+ d.radius;})
 				.data(visItems);
-				// .attr("x", function(d) {return x1(Math.max(d.start, minExtent) + 2);});
-				// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; });
-
-			labels.enter().append("text")
-				.text(function(d) {return d.year + ": " + d.values.length + " papers";})
-				.attr("x", function(d) {d.x = x1(Math.max(d.key, minExtent)); return d.x;})
-				// .attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
-				// .attr("y", function(d) {d.y = y1(d.lane)+rad; return d.y;})
-				.attr("y", function(d) {d.y = d.cy; return d.y;})
-				.attr("class", "yearItemLabel")
-				.attr("text-anchor", "end")
-				// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })
-				.on('mouseover', function(d) {
-						console.log(d.x);
-					});
-
-
-			labels.exit().remove();
+			numIndicators.enter().append("text")
+				.text(function(d) {return d.values.length})
+				.attr("x", function(d) {return x1(+d.year);})
+				.attr("y", function(d) {return y1(d.lane)+ d.radius;})
+				.attr("text-anchor", "middle")
+				.attr("class", "numIndicator");
 
 			//update axis
 			xAxisMainObj.call(xAxisMain);
 
-			_rotate(-20);
+			// _rotate(-20);
 			// relax(labels);
 
 		}
 	
+	var rad=10;
+	var beforeTransitionX = function(d) {
+		return x1(+d.year);
+	};
+	var afterTransitionX = function(d, i) {
+		return x1(+d.year) + ((i*i)*3);
+	};
+	var beforeTransitionY = function(d) {return d.cy+rad}
+	var afterTransitionY = function(d, i) {
+		return y1(d.lane) + 2.2*rad*i+5*rad;
+	};
 	function expand(yearData) {
-		// d3.selectAll(".yearItemLabel").classed("hidden");
-		$( '.yearItemLabel' ).hide();
-		var dur = 500;
-		var rad = yearData.radius;
-		var parentY = yearData.cy;
-		var beforeTransitionX = function(d) {
-			return x1(+d.year);
-		};
-		var afterTransitionX = function(d, i) {
-			return x1(+d.year) + ((i*i)*3);
-		};
-		var beforeTransitionY = parentY+rad;
-		var afterTransitionY = function(d, i) {
-			return y1(d.lane) + 2.2*rad*i+5*rad;
-		};
-		var marks = itemRects.selectAll(".paperItem")
-			        // .data(visItems, function(d) { return d.id; })
-			        .data(yearData.values);
-		marks.enter().append("circle")
-				// .attr("class", function(d) {return "mainItem miniItem" + d.lane;})
-				.attr("class", "paperItem")
-				.on('mouseover', function(d) {console.log(d);}).append('text').text('d');
-		// marks.exit().transition().duration(1000).attr("cy", parentY).remove();
-		// itemRects.selectAll('text').data(yearData.values).enter().append('text').attr("x", function(d) {console.log(d); return d.cx;}).attr("y", function(d) {return d.cy;}).text(function(d) {return d.title;});
-		marks.exit().remove();
+		console.log(yearData);
+		if (!yearData.expanded) {
+			
+			// d3.selectAll(".yearItemLabel").classed("hidden");
+			$( '.yearItemLabel' ).hide();
+			var dur = 500;
+			// var rad = yearData.radius;
+			var rad = 10;
+			var parentY = yearData.cy;
+			var marks = itemRects.selectAll(".paperItem")
+						// .data(visItems, function(d) { return d.id; })
+						.data(yearData.values);
+			marks.enter().append("circle")
+					// .attr("class", function(d) {return "mainItem miniItem" + d.lane;})
+					.attr("class", "paperItem")
+					.on('mouseover', function(d) {console.log(d);}).append('text').text('d');
+			// marks.exit().transition().duration(1000).attr("cy", parentY).remove();
+			// itemRects.selectAll('text').data(yearData.values).enter().append('text').attr("x", function(d) {console.log(d); return d.cx;}).attr("y", function(d) {return d.cy;}).text(function(d) {return d.title;});
+			marks.exit().remove();
 
-		var labels = itemRects.selectAll(".paperItemLabel")
-			.data(yearData.values);
-		labels.enter().append("text")
-			.attr("class", "paperItemLabel")
-			.attr("text-anchor", "end");
-		labels.exit().remove();
+			var labels = itemRects.selectAll(".paperItemLabel")
+				.data(yearData.values);
+			labels.enter().append("text")
+				.attr("class", "paperItemLabel")
+				.attr("text-anchor", "end");
+			labels.exit().remove();
 
-		marks.attr("cx", beforeTransitionX)
-				.attr('r', function(d) {
-						// d.radius = rad + (2 * efSumScale(d.sum_eigenfactor));
-						d.radius = rad;
-						return d.radius;
-					})
-				.attr("cy", beforeTransitionY)
+			marks.attr("cx", beforeTransitionX)
+					.attr('r', function(d) {
+							// d.radius = rad + (2 * efSumScale(d.sum_eigenfactor));
+							d.radius = rad + (2 * efScale(d.eigenfactor_score));
+							return d.radius;
+						})
+					.attr("cy", beforeTransitionY)
+					.transition().duration(dur)
+					.attr("cx", afterTransitionX)
+					.attr("cy", afterTransitionY)
+					.style(stylesVisible);
+			labels.attr("x", beforeTransitionX)
+				.text(function(d) {return d.title;})
+				.attr("y", beforeTransitionY)
 				.transition().duration(dur)
-				.attr("cx", afterTransitionX)
-				.attr("cy", afterTransitionY)
-				.style(stylesVisible);
-		labels.attr("x", beforeTransitionX)
-			.text(function(d) {return d.title;})
-			.attr("y", beforeTransitionY)
-			.transition().duration(dur)
-			.attr("x", afterTransitionX)
-			.attr("y", afterTransitionY);
+				.attr("x", afterTransitionX)
+				.attr("y", afterTransitionY);
+		yearData.expanded = true;
+		}
+	}
+
+	function contract(d) {
+		var dur = 500;
+		if (d.expanded) {
+			var marks = itemRects.selectAll(".paperItem")
+				.interrupt("contract")
+				.transition("contract").delay(2000).duration(dur)
+				.attr("cx", beforeTransitionX)
+				.attr("cy", 0)
+				.each("end", function(_, i) {
+					if (i === 0) d.expanded = false;
+					})
+				.remove();
+			var labels = itemRects.selectAll(".paperItemLabel")
+				.interrupt("contract")
+				.transition("contract").delay(2000).duration(dur)
+				.attr("x", beforeTransitionX)
+				.attr("y", 0)
+				.remove();
+		}
 	}
 });

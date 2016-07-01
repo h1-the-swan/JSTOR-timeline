@@ -202,6 +202,14 @@ d3.json(json_fname, function(error, data_total) {
 		}
 		stackItems(miniItems, y2);
 
+		var paperItemX = function(d, i) {
+			return x1(+d.year) + ((i*i) * 3);
+		};
+		var paperItemY = function(d, i) {
+			var rad = d.radius;
+			return y1(d.lane) + 2.2*rad*i+5*rad;
+		};
+
 		//mini labels
 		// mini.append("g").selectAll(".miniLabels")
 		// 	.data(data)
@@ -288,9 +296,11 @@ d3.json(json_fname, function(error, data_total) {
 			// stackItems(marks, y1);
 			//
 			var paperItems = itemRects.selectAll(".paperItem")
-				.attr("cx", function(d) {return x1(+d.year);});
+				// .attr("cx", function(d) {return x1(+d.year);});
+				.attr("cx", paperItemX);
 			var paperItemLabels = itemRects.selectAll(".paperItemLabel")
-				.attr("x", function(d) {return x1(+d.year);});
+				// .attr("x", function(d) {return x1(+d.year);});
+				.attr("x", paperItemX);
 
 			//update the item labels
 			// var rotate = -20;

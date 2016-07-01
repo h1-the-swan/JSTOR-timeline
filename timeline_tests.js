@@ -269,9 +269,10 @@ d3.json(json_fname, function(error, data_total) {
 				}).style(stylesVisible);
 
 			//update main item marks
-			var rad = 10;
+			var rad = 5;
 			marks = itemRects.selectAll(".yearItem")
 				.attr("cx", function(d) {return x1(+d.year);})
+				.attr("cy", function(d) {d.cy = y1(d.lane)+ rad; return d.cy; })
 			        // .data(visItems, function(d) { return d.id; })
 			        .data(visItems);
 				// .attr("x", function(d) {return x1(d.start);})
@@ -279,11 +280,11 @@ d3.json(json_fname, function(error, data_total) {
 			
 			marks.enter().append("circle")
 				.attr("class", "yearItem mainItem")
-				.attr("cx", function(d) {return d.cx = x1(+d.year);})
-				.attr("cy", function(d) {return d.cy = y1(d.lane)+ rad;})
+				.attr("cx", function(d) {d.cx = x1(+d.year); return d.cx;})
+				.attr("cy", function(d) {d.cy = y1(d.lane)+ rad; return d.cy; })
 				.attr('r', function(d) {
-						// d.radius = rad + (2 * efSumScale(d.sum_eigenfactor));
-						d.radius = rad;
+						d.radius = rad + (2 * efSumScale(d.sum_eigenfactor));
+						// d.radius = rad;
 						return d.radius;
 					})
 				.on('mouseover', expand)
@@ -365,6 +366,7 @@ d3.json(json_fname, function(error, data_total) {
 			}
 			labels = itemRects.selectAll(".yearItemLabel")
 				.attr("x", function(d) {d.x = x1(Math.max(d.key, minExtent)); return d.x;})
+				.attr("y", function(d) {d.y = d.cy; return d.y;})
 				.data(visItems);
 				// .attr("x", function(d) {return x1(Math.max(d.start, minExtent) + 2);});
 				// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; });
@@ -374,7 +376,7 @@ d3.json(json_fname, function(error, data_total) {
 				.attr("x", function(d) {d.x = x1(Math.max(d.key, minExtent)); return d.x;})
 				// .attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
 				// .attr("y", function(d) {d.y = y1(d.lane)+rad; return d.y;})
-				.attr("y", function(d) {return d.y = d.cy;})
+				.attr("y", function(d) {d.y = d.cy; return d.y;})
 				.attr("class", "yearItemLabel")
 				.attr("text-anchor", "end")
 				// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })

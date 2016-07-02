@@ -17,7 +17,7 @@ d3.json(json_fname, function(error, data_total) {
 		d.firstTitle = d.values[0].id;
 		d.sum_eigenfactor = d3.sum(d.values, function(dd) {return dd.eigenfactor_score;});
 		d.lane = 0;
-		d.year = d.key;
+		d.year = +d.key;
 	});
 
 	data = data_total.sort(function(a, b) {
@@ -234,10 +234,11 @@ d3.json(json_fname, function(error, data_total) {
 			.data(function(d) {return d.values})
 			.enter().append("g")
 			.attr("class", "paperItem")
-			.attr("transform", function(d) {
+			.attr("transform", function(d, i) {
 				d.x = 0;  //for now
 				d.y = 0;  //for now
-				d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
+				d.idx = i;
+				d.radius = mainMinRad + (2 * efScale(d.eigenfactor_score));
 				return "translate(" + d.x + "," + d.y + ")";
 			});
 
@@ -245,13 +246,19 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("r", 0)  //for now
 			.attr("class", "paperMark");
 
-		var paperItemX = function(d, i) {
-			return x1(+d.year) + ((i*i) * 3);
-		};
-		var paperItemY = function(d, i) {
-			var rad = d.radius;
-			return y1(d.lane) + 2.2*rad*i+5*rad;
-		};
+		var paperLabels = paperItems.append("text")
+			.attr("text-anchor", "end")
+			.attr("class", "paperLabel")
+			.style("display", "none")
+			.text(function(d) {return d.title;})
+
+		// var paperItemX = function(d, i) {
+		// 	return x1(+d.year) + ((i*i) * 3);
+		// };
+		// var paperItemY = function(d, i) {
+		// 	var rad = d.radius;
+		// 	return y1(d.lane) + 2.2*rad*i+5*rad;
+		// };
 
 
 		//mini labels
@@ -434,24 +441,47 @@ d3.json(json_fname, function(error, data_total) {
 
 		}
 	
-	var rad=10;
-	var beforeTransitionX = function(d) {
-		return x1(+d.year);
-	};
+	// var beforeTransitionX = function(d) {
+	// 	return x1(+d.year);
+	// };
 	var afterTransitionX = function(d, i) {
-		return x1(+d.year) + ((i*i)*3);
+		// return x1(+d.year) + ((i*i)*3);
+		return (i*i)*3;
 	};
-	var beforeTransitionY = function(d) {return d.cy+rad}
+	// var beforeTransitionY = function(d) {return d.cy+rad}
 	var afterTransitionY = function(d, i) {
-		return y1(d.lane) + 2.2*rad*i+5*rad;
+		// return y1(d.lane) + 2.2*rad*i+5*rad;
+		return 2.1*mainMinRad*i+3*mainMinRad;
 	};
 	function expand(yearData) {
 		var dur = 500;
 		var sel = paperItems.filter(function(d) {return d.year===yearData.year});
-		console.log(sel);
+		sel.style("pointer-events", "none")
+			.transition().duration(dur)
+			.attr("transform", function(d, i) {
+				return "translate(" + afterTransitionX(d, i) + "," + afterTransitionY(d, i) + ")";
+			})
+			.style("pointer-events", "auto");
+		sel.selectAll(".paperMark").transition().duration(dur)
+			.attr("r", function(d) {return d.radius;});
+		//make labels appear
+		sel.selectAll(".paperLabel")
+			.style("pointer-events", "none")
+			.style("display", "")
+			.style("opacity", 0)
+			.transition()
+			.delay(function(d) {return dur/2 + d.idx*75;})
+			.duration(dur)
+			.style("opacity", 1);
 	}
 	function contract(yearData) {
-		//
+		var dur = 500;
+		var sel = paperItems.filter(function(d) {return d.year===yearData.year});
+		sel.transition().duration(dur)
+			.attr("transform", "translate(0,0)");
+		sel.selectAll(".paperMark").transition().duration(dur*1.5)
+			.attr("r", 0);
+		sel.selectAll(".paperLabel").style("display", "none");
 	}
 	// function expand(yearData) {
 	// 	console.log(yearData);

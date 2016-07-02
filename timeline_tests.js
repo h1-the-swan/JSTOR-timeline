@@ -20,9 +20,6 @@ d3.json(json_fname, function(error, data_total) {
 		d.year = +d.key;
 	});
 
-	data = data_total.sort(function(a, b) {
-			return d3.descending(a.eigenfactor_score, b.eigenfactor_score); 
-		}).slice(0,25);
 	var lanes = ["Climate change"],
 				laneLength = lanes.length,
 			// timeBegin = new Date(String(minYear-1)),
@@ -57,7 +54,7 @@ d3.json(json_fname, function(error, data_total) {
 				.domain([0, laneLength])
 				.range([0, miniHeight]);
 		var efScale = d3.scale.linear()
-				.domain(d3.extent(data, function(d) { return d.eigenfactor_score; }))
+				.domain(d3.extent(data_total, function(d) { return d.eigenfactor_score; }))
 				.range([0, 5]);
 		var efSumScale = d3.scale.linear()
 				.domain(d3.extent(dataByYear, function(d) { return d.sum_eigenfactor; }))
@@ -88,15 +85,16 @@ d3.json(json_fname, function(error, data_total) {
 					.attr("class", "mini");
 		
 		//main lanes and texts
-		// TODO lane lines are weird. draws one line per data point?
-		main.append("g").selectAll(".laneLines")
-			.data(data)
-			.enter().append("line")
-			.attr("x1", m[1])
-			.attr("y1", function(d) {return y1(d.lane);})
-			.attr("x2", w)
-			.attr("y2", function(d) {return y1(d.lane);})
-			.attr("stroke", "lightgray")
+		var mainLaneLinesG = main.append("g");
+		for (var i = 0, len = lanes.length; i < len; i++) {
+			mainLaneLinesG.append("line")
+				.attr("x1", m[1])
+				.attr("y1", function() {return y2(i);})
+				.attr("x2", w)
+				.attr("y2", function() {return y2(i);})
+				.attr("class", "laneLine")
+				.attr("stroke", "lightgray");
+		}
 
 		main.append("g").selectAll(".laneText")
 			.data(lanes)
@@ -109,14 +107,16 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("class", "laneText");
 		
 		//mini lanes and texts
-		mini.append("g").selectAll(".laneLines")
-			.data(data_total)
-			.enter().append("line")
-			.attr("x1", m[1])
-			.attr("y1", function(d) {return y2(d.lane);})
-			.attr("x2", w)
-			.attr("y2", function(d) {return y2(d.lane);})
-			.attr("stroke", "lightgray");
+		var miniLaneLinesG = mini.append("g");
+		for (var i = 0, len = lanes.length; i < len; i++) {
+			miniLaneLinesG.append("line")
+				.attr("x1", m[1])
+				.attr("y1", function() {return y2(i);})
+				.attr("x2", w)
+				.attr("y2", function() {return y2(i);})
+				.attr("class", "laneLine")
+				.attr("stroke", "lightgray");
+		}
 
 		mini.append("g").selectAll(".laneText")
 			.data(lanes)
@@ -164,14 +164,6 @@ d3.json(json_fname, function(error, data_total) {
 				d.radius = 5 + efScale(d.eigenfactor_score);
 				return "translate(" + d.x + "," + d.y + ")";
 			});
-			// .enter().append("circle")
-			// .attr("class", function(d) {return "miniItem" + d.lane;})
-			// .attr("cx", function(d) {return x(d.start);})
-			// .attr("r", function(d) {
-			// 		d.radius = 5 + efScale(d.eigenfactor_score);
-			// 		return d.radius;
-			// 	})
-			// .style(stylesBase);
 
 		function stackItems(items, scale) {
 			var yearsList = [];
@@ -180,7 +172,6 @@ d3.json(json_fname, function(error, data_total) {
 					yearsList.push(d.year);
 				}
 			});
-			console.log(items);
 			var maxRad = d3.max(items[0], function(d) {return d.__data__.radius});
 			for (var i = 0, len = yearsList.length; i < len; i++) {
 				thisYearMini = items.filter(function(d) {return d.year==yearsList[i]});
@@ -252,13 +243,6 @@ d3.json(json_fname, function(error, data_total) {
 			.style("display", "none")
 			.text(function(d) {return d.title;})
 
-		// var paperItemX = function(d, i) {
-		// 	return x1(+d.year) + ((i*i) * 3);
-		// };
-		// var paperItemY = function(d, i) {
-		// 	var rad = d.radius;
-		// 	return y1(d.lane) + 2.2*rad*i+5*rad;
-		// };
 
 
 		//mini labels
@@ -284,8 +268,6 @@ d3.json(json_fname, function(error, data_total) {
 
 		// initialize brush
 		var brushInit = [
-			// new Date("1970-01-01"),
-			// new Date("1995-01-01")
 			1970, 1995
 			];
 		brush.extent(brushInit);
@@ -296,8 +278,6 @@ d3.json(json_fname, function(error, data_total) {
 		function display() {
 			var minExtent = brush.extent()[0],
 				maxExtent = brush.extent()[1],
-				// visItems = data.filter(function(d) {return d.start < maxExtent && d.start > minExtent;});
-				// visItems = dataByYear.filter(function(d) {return d.year < maxExtent && d.year > minExtent;});
 				visItems = yearItems.filter(function(d) {return d.year < maxExtent && d.year > minExtent;})
 				notVisItems = yearItems.filter(function(d) {return d.year>= maxExtent || d.year <= minExtent;});
 			visItems.style("display", "");
@@ -330,13 +310,6 @@ d3.json(json_fname, function(error, data_total) {
 			});
 
 			yearMarks.attr("r", function(d) {return d.radius;});
-
-			// var paperItems = mainClipPath.selectAll(".paperItem")
-			// 	// .attr("cx", function(d) {return x1(+d.year);});
-			// 	.attr("cx", paperItemX);
-			// var paperItemLabels = mainClipPath.selectAll(".paperItemLabel")
-			// 	// .attr("x", function(d) {return x1(+d.year);});
-			// 	.attr("x", paperItemX);
 
 			//update the item labels
 			// var rotate = -20;
@@ -422,33 +395,19 @@ d3.json(json_fname, function(error, data_total) {
             //
 			// labels.exit().remove();
 
-			// var numIndicators = mainClipPath.selectAll(".numIndicator")
-			// 	.attr("x", function(d) {return x1(+d.year);})
-			// 	.attr("y", function(d) {return y1(d.lane)+ d.radius;})
-			// 	.data(visItems);
-			// numIndicators.enter().append("text")
-			// 	.text(function(d) {return d.values.length})
-			// 	.attr("x", function(d) {return x1(+d.year);})
-			// 	.attr("y", function(d) {return y1(d.lane)+ d.radius;})
-			// 	.attr("text-anchor", "middle")
-			// 	.attr("class", "numIndicator");
-
 			//update axis
 			xAxisMainObj.call(xAxisMain);
 
+			// // only use one of the following (or none)
 			// _rotate(-20);
 			// relax(labels);
 
 		}
 	
-	// var beforeTransitionX = function(d) {
-	// 	return x1(+d.year);
-	// };
 	var afterTransitionX = function(d, i) {
 		// return x1(+d.year) + ((i*i)*3);
 		return (i*i)*3;
 	};
-	// var beforeTransitionY = function(d) {return d.cy+rad}
 	var afterTransitionY = function(d, i) {
 		// return y1(d.lane) + 2.2*rad*i+5*rad;
 		return 2.1*mainMinRad*i+3*mainMinRad;
@@ -460,8 +419,8 @@ d3.json(json_fname, function(error, data_total) {
 			.transition().duration(dur)
 			.attr("transform", function(d, i) {
 				return "translate(" + afterTransitionX(d, i) + "," + afterTransitionY(d, i) + ")";
-			})
-			.style("pointer-events", "auto");
+			});
+			// .style("pointer-events", "auto");
 		sel.selectAll(".paperMark").transition().duration(dur)
 			.attr("r", function(d) {return d.radius;});
 		//make labels appear

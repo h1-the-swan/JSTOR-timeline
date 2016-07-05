@@ -266,35 +266,56 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("y", 1)
 			.attr("height", miniHeight - 1);
 
+		var extentLines = [];
+		for (var i = 0; i < 2 ; i++) {
+			extentLines.push(chart.append("line").attr("class", "extentLine"));
+		}
+		function updateExtentLines(left, right) {
+			if (brush.empty()) {
+				extentLines.forEach(function(sel) {sel.style("display", "none");})
+			} else {
+				extentLines.forEach(function(sel) {sel.style("display", "");})
+				extentLines[0].attr("x1", m[3])
+					.attr("y1", m[0])
+					.attr("x2", left + m[3])
+					.attr("y2", (mainHeight + m[0]));
+				extentLines[1].attr("x1", w+m[3])
+					.attr("y1", m[0])
+					.attr("x2", right + m[3])
+					.attr("y2", (mainHeight + m[0]));
+			}
+		}
+
 		// initialize brush
 		var brushInit = [
 			1975, 1990
 			];
-		brush.extent(brushInit);
+		// brush.extent(brushInit);
+		mini.select(".brush").call(brush.extent(brushInit));
 
 		display();
 
 
-		// I'm not sure there's a way to use d3 transitions to control the brush, but here's a hacky way of doing it manually.
-		var dly = 30;
-		function brushTransition(dly) {
-			currExtent = [brush.extent()[0], brush.extent()[1]];
-			brush(d3.select(".brush").transition().duration(dly).call(display));
-			// brush.event(d3.select(".brush").transition().delay(dly).duration(0));
-		}
-		// brush.extent([1970,2000]);
-		var minExtent = brush.extent()[0],
-			maxExtent = brush.extent()[1];
-		var destinationExtent = 1998;
-		var i = maxExtent;
-		var refreshIntervalId = setInterval(function() {
-			   	i = i + 0.2;
-				brush.extent([minExtent, i]);
-				brushTransition(dly);
-				if (i >= destinationExtent) {
-					clearInterval(refreshIntervalId);
-				}
-			}, dly);
+		// // I'm not sure there's a way to use d3 transitions to control the brush, but here's a hacky way of doing it manually.
+		// var dly = 30;
+		// function brushTransition(dly) {
+		// 	currExtent = [brush.extent()[0], brush.extent()[1]];
+		// 	brush(d3.select(".brush").transition().duration(dly).call(display));
+		// 	// brush.event(d3.select(".brush").transition().delay(dly).duration(0));
+		// }
+		// // brush.extent([1970,2000]);
+		// var minExtent = brush.extent()[0],
+		// 	maxExtent = brush.extent()[1];
+		// var destinationExtent = 1998;
+		// var i = maxExtent;
+		// var refreshIntervalId = setInterval(function() {
+		// 	   	i = i + 0.2;
+		// 		brush.extent([minExtent, i]);
+		// 		brushTransition(dly);
+		// 		if (i >= destinationExtent) {
+		// 			clearInterval(refreshIntervalId);
+		// 		}
+		// 	}, dly);
 
 		// // attempt to use tween function to do it. not really working
 		// brush.extent([1970, 2005]);
@@ -305,18 +326,32 @@ d3.json(json_fname, function(error, data_total) {
 		// brush(d3.select(".brush").transition().duration(1000));
 		// brush.event(d3.select(".brush").transition().delay(1000).duration(0));
 
+		// This works! (after modifying the display() function. see the note at the top of display())
+		brush.event(mini.select(".brush").transition().delay(1000).duration(1000).call(brush.extent([1970, 2000])));
+
 		
 		function display() {
-			var minExtent = brush.extent()[0],
-				maxExtent = brush.extent()[1],
+			// note: calculating the brush extent using brush.extent() doesn't really work here (with transition ticks)
+			// because it goes the final extent values at the beginning of the transition.
+			// So instead, get the measurements of the brush element and calculate the extent using the scale (x.invert())
+			var extentSelect = mini.select(".brush").select(".extent");
+			var minExtentScreen = +extentSelect.attr("x");
+			var maxExtentScreen = minExtentScreen + (+extentSelect.attr("width"));
+			// console.log(x.invert(maxExtentScreen));
+			// var minExtent = brush.extent()[0],
+			// 	maxExtent = brush.extent()[1],
+			var minExtent = x.invert(minExtentScreen),
+				maxExtent = x.invert(maxExtentScreen),
 				visItems = yearItems.filter(function(d) {return d.year < maxExtent && d.year > minExtent;})
 				notVisItems = yearItems.filter(function(d) {return d.year>= maxExtent || d.year <= minExtent;});
 			visItems.style("display", "");
 			notVisItems.style("display", "none");
+			// console.log(brush.extent());
 
-			mini.select(".brush")
-				.call(brush.extent([minExtent, maxExtent]));
-			console.log(maxExtent-minExtent);
+			// mini.select(".brush")
+			// 	.call(brush.extent([minExtent, maxExtent]));
+			// console.log(maxExtent-minExtent);
+			updateExtentLines(minExtentScreen, maxExtentScreen);
 
 			x1.domain([minExtent, maxExtent]);
 

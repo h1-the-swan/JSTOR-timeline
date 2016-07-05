@@ -211,7 +211,7 @@ d3.json(json_fname, function(error, data_total) {
 		var yearMarks = yearItems.append("circle")
 			.attr("class", "yearMark")
 			.on('mouseover', expand)
-			.on('mouseout', contract)
+			// .on('mouseout', contract)
 			.style(stylesVisible);
 
 		//label for number of papers
@@ -479,13 +479,15 @@ d3.json(json_fname, function(error, data_total) {
 		return 2.1*mainMinRad*i+3*mainMinRad;
 	};
 	function expand(yearData) {
+		contract();
 		var dur = 500;
 		var sel = paperItems.filter(function(d) {return d.year===yearData.year});
 		sel.style("pointer-events", "none")
 			.transition().duration(dur)
 			.attr("transform", function(d, i) {
 				return "translate(" + afterTransitionX(d, i) + "," + afterTransitionY(d, i) + ")";
-			});
+			})
+			.each("start", function() {d3.select(this).classed("expanded", true)});
 			// .style("pointer-events", "auto");
 		sel.selectAll(".paperMark").transition().duration(dur)
 			.attr("r", function(d) {return d.radius;});
@@ -499,11 +501,15 @@ d3.json(json_fname, function(error, data_total) {
 			.duration(dur)
 			.style("opacity", 1);
 	}
+	// function contract(yearData) {
 	function contract(yearData) {
 		var dur = 500;
-		var sel = paperItems.filter(function(d) {return d.year===yearData.year});
+		// var sel = paperItems.filter(function(d) {return d.year===yearData.year});
+		var sel = d3.selectAll(".expanded");
+		console.log(sel.empty());
 		sel.transition().duration(dur)
-			.attr("transform", "translate(0,0)");
+			.attr("transform", "translate(0,0)")
+			.each("end", function() {d3.select(this).classed("expanded", false);})
 		sel.selectAll(".paperMark").transition().duration(dur*1.5)
 			.attr("r", 0);
 		sel.selectAll(".paperLabel").style("display", "none");

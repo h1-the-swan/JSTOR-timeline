@@ -268,11 +268,42 @@ d3.json(json_fname, function(error, data_total) {
 
 		// initialize brush
 		var brushInit = [
-			1970, 1995
+			1975, 1985
 			];
 		brush.extent(brushInit);
 
 		display();
+
+
+		// I'm not sure there's a way to use d3 transitions to control the brush, but here's a hacky way of doing it manually.
+		var dly = 30;
+		function brushTransition(dly) {
+			currExtent = [brush.extent()[0], brush.extent()[1]];
+			brush(d3.select(".brush").transition().duration(dly).call(display));
+			// brush.event(d3.select(".brush").transition().delay(dly).duration(0));
+		}
+		// brush.extent([1970,2000]);
+		var minExtent = brush.extent()[0],
+			maxExtent = brush.extent()[1];
+		var destinationExtent = 1998;
+		var i = maxExtent;
+		var refreshIntervalId = setInterval(function() {
+			   	i = i + 0.1;
+				brush.extent([minExtent, i]);
+				brushTransition(dly);
+				if (i >= destinationExtent) {
+					clearInterval(refreshIntervalId);
+				}
+			}, dly);
+
+		// // attempt to use tween function to do it. not really working
+		// brush.extent([1970, 2005]);
+		// brush(d3.select(".brush").transition().duration(5000)
+		// 		.tween("side-effects", function() { return function(t, tt, ttt) { console.log(brush.extent()[0]);
+		// 			brush.event(d3.select(".brush").transition().delay(t).duration(0));
+		// 		};}));
+		// brush(d3.select(".brush").transition().duration(1000));
+		// brush.event(d3.select(".brush").transition().delay(1000).duration(0));
 
 		
 		function display() {

@@ -268,7 +268,7 @@ d3.json(json_fname, function(error, data_total) {
 
 		// initialize brush
 		var brushInit = [
-			1975, 1985
+			1975, 1990
 			];
 		brush.extent(brushInit);
 
@@ -288,7 +288,7 @@ d3.json(json_fname, function(error, data_total) {
 		var destinationExtent = 1998;
 		var i = maxExtent;
 		var refreshIntervalId = setInterval(function() {
-			   	i = i + 0.1;
+			   	i = i + 0.2;
 				brush.extent([minExtent, i]);
 				brushTransition(dly);
 				if (i >= destinationExtent) {

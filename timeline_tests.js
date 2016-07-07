@@ -6,6 +6,8 @@ d3.json(json_fname, function(error, data_total) {
 	data_total.forEach(function(d) {
 		d.lane = 0;
 	});
+	var markType = "icon";  // "icon", "circle"
+
 	var dataByYear = d3.nest()
 						.key(function(d) {return d.year;})
 						.sortValues(function(a, b) {
@@ -26,7 +28,7 @@ d3.json(json_fname, function(error, data_total) {
 			timeBegin = +d3.min(dataByYear, function(d) { return d.year; }) - 1,
 			timeEnd = +d3.max(dataByYear, function(d) { return d.year; }) + 1;
 
-		var m = [20, 15, 15, 120], //top right bottom left
+		var m = [20, 15, 15, 15], //top right bottom left
 			w = 960 - m[1] - m[3],
 			h = 350 - m[0] - m[2],
 			miniHeight = laneLength * 12 + 30,
@@ -96,15 +98,15 @@ d3.json(json_fname, function(error, data_total) {
 				.attr("stroke", "lightgray");
 		}
 
-		main.append("g").selectAll(".laneText")
-			.data(lanes)
-			.enter().append("text")
-			.text(function(d) {return d;})
-			.attr("x", -m[1])
-			.attr("y", function(d, i) {return y1(i + .5);})
-			.attr("dy", ".5ex")
-			.attr("text-anchor", "end")
-			.attr("class", "laneText");
+		// main.append("g").selectAll(".laneText")
+		// 	.data(lanes)
+		// 	.enter().append("text")
+		// 	.text(function(d) {return d;})
+		// 	.attr("x", -m[1])
+		// 	.attr("y", function(d, i) {return y1(i + .5);})
+		// 	.attr("dy", ".5ex")
+		// 	.attr("text-anchor", "end")
+		// 	.attr("class", "laneText");
 		
 		//mini lanes and texts
 		var miniLaneLinesG = mini.append("g");
@@ -118,15 +120,15 @@ d3.json(json_fname, function(error, data_total) {
 				.attr("stroke", "lightgray");
 		}
 
-		mini.append("g").selectAll(".laneText")
-			.data(lanes)
-			.enter().append("text")
-			.text(function(d) {return d;})
-			.attr("x", -m[1])
-			.attr("y", function(d, i) {return y2(i + .5);})
-			.attr("dy", ".5ex")
-			.attr("text-anchor", "end")
-			.attr("class", "laneText");
+		// mini.append("g").selectAll(".laneText")
+		// 	.data(lanes)
+		// 	.enter().append("text")
+		// 	.text(function(d) {return d;})
+		// 	.attr("x", -m[1])
+		// 	.attr("y", function(d, i) {return y2(i + .5);})
+		// 	.attr("dy", ".5ex")
+		// 	.attr("text-anchor", "end")
+		// 	.attr("class", "laneText");
 
 		// Axes
 		var xAxisMini = d3.svg.axis()
@@ -191,80 +193,159 @@ d3.json(json_fname, function(error, data_total) {
 		}
 		stackItems(miniItems, y2);
 
-		// var miniMarks = miniItems.append("circle")
-		// 	.attr("class", "miniMark")
-		// 	.attr("r", function(d) {return d.radius;})
-		// 	.style(stylesBase);
-		var miniMarks = miniItems.append("text")
+		var miniMarks = miniItems.append("circle")
 			.attr("class", "miniMark")
-			.style("font-family", "FontAwesome")
-			.text("\uf0f6")
-			.style("font-size", function(d) {return (d.radius/10) + "em";});
-			// .attr("r", function(d) {return d.radius;})
-			// .style(stylesBase);
+			.attr("r", function(d) {return d.radius;})
+			.style(stylesBase);
 
-		//main items
-		var yearItems = mainClipPath.append("g").selectAll(".yearItem")
-			.data(dataByYear)
-			.enter().append("g")
-			.attr("class", "yearItem")
-			.attr("transform", function(d) {
-				d.x = 0;  //for now
-				d.y = 0;  //for now
-				d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
-				return "translate(" + d.x + "," + d.y + ")";
-			});
 
-		// var yearMarks = yearItems.append("circle")
-		// 	.attr("class", "yearMark")
-		// 	// .on('mouseover', expand)
-		// 	.on('mouseover', function(d) {
-		// 		contract();
-		// 		var sel = paperItems.filter(function(dd) {return dd.year===d.year});
-		// 		expand(sel);
-		// 		})
-		// 	// .on('mouseout', contract)
-		// 	.style(stylesVisible);
-		var yearMarks = yearItems.append("text")
-			.attr("class", "yearMark")
-			.style("font-family", "FontAwesome")
-			.text("\uf0f6")
-			// .on('mouseover', expand)
-			.on('mouseover', function(d) {
-				contract();
-				var sel = paperItems.filter(function(dd) {return dd.year===d.year});
-				expand(sel);
-				});
-			// .on('mouseout', contract)
+		switch (markType) {
+			case 'circle':
+				//main items
+				var yearItems = mainClipPath.append("g").selectAll(".yearItem")
+					.data(dataByYear)
+					.enter().append("g")
+					.attr("class", "yearItem")
+					.attr("transform", function(d) {
+						d.x = 0;  //for now
+						d.y = 0;  //for now
+						d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
+						return "translate(" + d.x + "," + d.y + ")";
+					});
 
-		//label for number of papers
-		yearItems.append("text")
-			.attr("text-anchor", "middle")
-			.attr("y", ".3em")  //nudge
-			.attr("class", "numIndicator")
-			.text(function(d) {return d.values.length;});
+				var yearMarks = yearItems.append("circle")
+					.attr("class", "yearMark")
+					// .on('mouseover', expand)
+					.on('mouseover', function(d) {
+						contract();
+						var sel = paperItems.filter(function(dd) {return dd.year===d.year});
+						expand(sel);
+						})
+					// .on('mouseout', contract)
+					.style(stylesVisible);
+					
+				//label for number of papers
+				yearItems.append("text")
+					.attr("text-anchor", "middle")
+					.attr("y", ".3em")  //nudge
+					.attr("class", "numIndicator")
+					.text(function(d) {return d.values.length;});
 
-		var paperItems = yearItems.append("g").selectAll(".paperItem")
-			.data(function(d) {return d.values})
-			.enter().append("g")
-			.attr("class", "paperItem")
-			.attr("transform", function(d, i) {
-				d.x = 0;  //for now
-				d.y = 0;  //for now
-				d.idx = i;
-				d.radius = mainMinRad + (2 * efScale(d.eigenfactor_score));
-				return "translate(" + d.x + "," + d.y + ")";
-			});
+				var paperItems = yearItems.append("g").selectAll(".paperItem")
+					.data(function(d) {return d.values})
+					.enter().append("g")
+					.attr("class", "paperItem")
+					.attr("transform", function(d, i) {
+						d.x = 0;  //for now
+						d.y = 0;  //for now
+						d.idx = i;
+						d.radius = mainMinRad + (2 * efScale(d.eigenfactor_score));
+						return "translate(" + d.x + "," + d.y + ")";
+					});
 
-		var paperMarks = paperItems.append("circle")
-			.attr("r", 0)  //for now
-			.attr("class", "paperMark");
+				var paperMarks = paperItems.append("circle")
+					.attr("r", 0)  //for now
+					.attr("class", "paperMark");
 
-		var paperLabels = paperItems.append("text")
-			.attr("text-anchor", "end")
-			.attr("class", "paperLabel")
-			.style("display", "none")
-			.text(function(d) {return d.title;})
+				var paperLabels = paperItems.append("text")
+					.attr("text-anchor", "end")
+					.attr("class", "paperLabel")
+					.style("display", "none")
+					.text(function(d) {return d.title;})
+
+				break;
+			
+			case 'icon':
+				//main items
+				var yearItems = mainClipPath.append("g").selectAll(".yearItem")
+					.data(dataByYear)
+					.enter().append("g")
+					.attr("class", "yearItem")
+					.attr("transform", function(d) {
+						d.x = 0;  //for now
+						d.y = 0;  //for now
+						d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
+						return "translate(" + d.x + "," + d.y + ")";
+					});
+				var paperItems = yearItems.append("g").selectAll(".paperItem")
+					.data(function(d) {return d.values})
+					.enter().append("g")
+					.attr("class", "paperItem")
+					.attr("transform", function(d, i) {
+						d.x = 0;  //for now
+						d.y = 0;  //for now
+						d.idx = i;
+						d.radius = mainMinRad + (2 * efScale(d.eigenfactor_score));
+						return "translate(" + d.x + "," + d.y + ")";
+					});
+
+				var paperMarks = paperItems.append("text")
+					.attr("class", "paperMark")
+					.style("font-family", "FontAwesome")
+					.text("\uf0f6")
+					// .on('mouseover', expand)
+					.on('mouseover', function(d) {
+						contract();
+						var sel = paperItems.filter(function(dd) {return dd.year===d.year});
+						expand(sel);
+						});
+					// .on('mouseout', contract)
+
+				var paperLabels = paperItems.append("text")
+					.attr("text-anchor", "end")
+					.attr("class", "paperLabel")
+					.style("display", "none")
+					.text(function(d) {return d.title;})
+				// //main items
+				// var paperItems = mainClipPath.append("g").selectAll(".paperItem")
+				// 	.data(data_total)
+				// 	.enter().append("g")
+				// 	.attr("class", "paperItem")
+				// 	.attr("transform", function(d) {
+				// 		d.x = 0;  //for now
+				// 		d.y = 0;  //for now
+				// 		d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
+				// 		return "translate(" + d.x + "," + d.y + ")";
+				// 	});
+				// var paperMarks = paperItems.append("text")
+				// 	.attr("class", "paperMark")
+				// 	.style("font-family", "FontAwesome")
+				// 	.text("\uf0f6")
+				// 	// .on('mouseover', expand)
+				// 	.on('mouseover', function(d) {
+				// 		contract();
+				// 		var sel = paperItems.filter(function(dd) {return dd.year===d.year});
+				// 		expand(sel);
+				// 		});
+				// 	// .on('mouseout', contract)
+
+				// var yearItems = mainClipPath.append("g").selectAll(".yearItem")
+				// 	.data(dataByYear)
+				// 	.enter().append("g")
+				// 	.attr("class", "yearItem")
+				// 	.attr("transform", function(d) {
+				// 		d.x = 0;  //for now
+				// 		d.y = 0;  //for now
+				// 		d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
+				// 		return "translate(" + d.x + "," + d.y + ")";
+				// 	});
+				// var yearMarks = yearItems.append("text")
+				// 	.attr("class", "yearMark")
+				// 	.style("font-family", "FontAwesome")
+				// 	.text("\uf0f6")
+				// 	// .on('mouseover', expand)
+				// 	.on('mouseover', function(d) {
+				// 		contract();
+				// 		var sel = paperItems.filter(function(dd) {return dd.year===d.year});
+				// 		expand(sel);
+				// 		});
+				// 	// .on('mouseout', contract)
+
+				break;
+				
+		}
+
+
 
 
 
@@ -371,42 +452,89 @@ d3.json(json_fname, function(error, data_total) {
 			// var minExtent = brush.extent()[0],
 			// 	maxExtent = brush.extent()[1],
 			var minExtent = x.invert(minExtentScreen),
-				maxExtent = x.invert(maxExtentScreen),
-				visItems = yearItems.filter(function(d) {return d.year < maxExtent && d.year > minExtent;})
-				notVisItems = yearItems.filter(function(d) {return d.year>= maxExtent || d.year <= minExtent;});
-			visItems.style("display", "");
-			notVisItems.style("display", "none");
-			// console.log(brush.extent());
+				maxExtent = x.invert(maxExtentScreen);
 
-			// mini.select(".brush")
-			// 	.call(brush.extent([minExtent, maxExtent]));
-			// console.log(maxExtent-minExtent);
-			updateExtentLines(minExtentScreen, maxExtentScreen);
+			switch (markType) {
+				case 'circle':
+					var visItems = yearItems.filter(function(d) {return d.year < maxExtent && d.year > minExtent;})
+					var notVisItems = yearItems.filter(function(d) {return d.year>= maxExtent || d.year <= minExtent;});
+					visItems.style("display", "");
+					notVisItems.style("display", "none");
+					// console.log(brush.extent());
 
-			x1.domain([minExtent, maxExtent]);
+					// mini.select(".brush")
+					// 	.call(brush.extent([minExtent, maxExtent]));
+					// console.log(maxExtent-minExtent);
+					updateExtentLines(minExtentScreen, maxExtentScreen);
 
-			// update styles of mini items that are visible in the main display.
-			// reset all to normal, then style just the visible ones
-			miniItems.style(stylesBase);
-			miniItems.filter(function(d) {
-				var match = false;
-				visItems.forEach(function(dd) {
-					if (d.id==dd.firstTitle) {
-						match = true;
-					}
-				});
-				return match;
-				}).style(stylesVisible);
+					x1.domain([minExtent, maxExtent]);
 
-			//update main item marks
-			visItems.attr("transform", function(d) {
-				d.x = x1(d.year);
-				d.y = y1(d.lane) + mainMinRad;
-				return "translate(" + d.x + "," + d.y + ")";
-			});
+					// update styles of mini items that are visible in the main display.
+					// reset all to normal, then style just the visible ones
+					miniItems.style(stylesBase);
+					miniItems.filter(function(d) {
+						var match = false;
+						visItems.forEach(function(dd) {
+							if (d.id==dd.firstTitle) {
+								match = true;
+							}
+						});
+						return match;
+						}).style(stylesVisible);
 
-			// yearMarks.attr("r", function(d) {return d.radius;});
-			yearMarks.style("font-size", function(d) {return (d.radius/10) + "em";});
+					//update main item marks
+					visItems.attr("transform", function(d) {
+						d.x = x1(d.year);
+						d.y = y1(d.lane) + mainMinRad;
+						return "translate(" + d.x + "," + d.y + ")";
+					});
+
+					yearMarks.attr("r", function(d) {return d.radius;});
+
+					break;
+
+				case 'icon':
+					var visItems = yearItems.filter(function(d) {return d.year < maxExtent && d.year > minExtent;})
+					var notVisItems = yearItems.filter(function(d) {return d.year>= maxExtent || d.year <= minExtent;});
+					visItems.style("display", "");
+					notVisItems.style("display", "none");
+					// console.log(brush.extent());
+
+					// mini.select(".brush")
+					// 	.call(brush.extent([minExtent, maxExtent]));
+					// console.log(maxExtent-minExtent);
+					updateExtentLines(minExtentScreen, maxExtentScreen);
+
+					x1.domain([minExtent, maxExtent]);
+
+					// update styles of mini items that are visible in the main display.
+					// reset all to normal, then style just the visible ones
+					miniItems.style(stylesBase);
+					miniItems.filter(function(d) {
+						var match = false;
+						visItems.forEach(function(dd) {
+							if (d.id==dd.firstTitle) {
+								match = true;
+							}
+						});
+						return match;
+						}).style(stylesVisible);
+
+					//update main item marks
+					visItems.attr("transform", function(d) {
+						d.x = x1(d.year);
+						d.y = y1(d.lane) + 20;
+						return "translate(" + d.x + "," + d.y + ")";
+					});
+
+					paperMarks.attr("transform", function(d) {
+								return "translate(" + "0" + "," + d.idx*2 + ")";
+							})
+						.style("font-size", function(d) {return (d.radius/10) + "em";});
+
+					break;
+				
+			}
 
 			//update the item labels
 			// var rotate = -20;
@@ -511,6 +639,7 @@ d3.json(json_fname, function(error, data_total) {
 	};
 	// function expand(yearData) {
 	function expand(sel) {
+		console.log(sel);
 		// contract();
 		var dur = 500;
 		// var sel = paperItems.filter(function(d) {return d.year===yearData.year});

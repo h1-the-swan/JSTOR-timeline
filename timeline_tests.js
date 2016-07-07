@@ -191,10 +191,17 @@ d3.json(json_fname, function(error, data_total) {
 		}
 		stackItems(miniItems, y2);
 
-		var miniMarks = miniItems.append("circle")
+		// var miniMarks = miniItems.append("circle")
+		// 	.attr("class", "miniMark")
+		// 	.attr("r", function(d) {return d.radius;})
+		// 	.style(stylesBase);
+		var miniMarks = miniItems.append("text")
 			.attr("class", "miniMark")
-			.attr("r", function(d) {return d.radius;})
-			.style(stylesBase);
+			.style("font-family", "FontAwesome")
+			.text("\uf0f6")
+			.style("font-size", function(d) {return (d.radius/10) + "em";});
+			// .attr("r", function(d) {return d.radius;})
+			// .style(stylesBase);
 
 		//main items
 		var yearItems = mainClipPath.append("g").selectAll(".yearItem")
@@ -208,16 +215,27 @@ d3.json(json_fname, function(error, data_total) {
 				return "translate(" + d.x + "," + d.y + ")";
 			});
 
-		var yearMarks = yearItems.append("circle")
+		// var yearMarks = yearItems.append("circle")
+		// 	.attr("class", "yearMark")
+		// 	// .on('mouseover', expand)
+		// 	.on('mouseover', function(d) {
+		// 		contract();
+		// 		var sel = paperItems.filter(function(dd) {return dd.year===d.year});
+		// 		expand(sel);
+		// 		})
+		// 	// .on('mouseout', contract)
+		// 	.style(stylesVisible);
+		var yearMarks = yearItems.append("text")
 			.attr("class", "yearMark")
+			.style("font-family", "FontAwesome")
+			.text("\uf0f6")
 			// .on('mouseover', expand)
 			.on('mouseover', function(d) {
 				contract();
 				var sel = paperItems.filter(function(dd) {return dd.year===d.year});
 				expand(sel);
-				})
+				});
 			// .on('mouseout', contract)
-			.style(stylesVisible);
 
 		//label for number of papers
 		yearItems.append("text")
@@ -387,7 +405,8 @@ d3.json(json_fname, function(error, data_total) {
 				return "translate(" + d.x + "," + d.y + ")";
 			});
 
-			yearMarks.attr("r", function(d) {return d.radius;});
+			// yearMarks.attr("r", function(d) {return d.radius;});
+			yearMarks.style("font-size", function(d) {return (d.radius/10) + "em";});
 
 			//update the item labels
 			// var rotate = -20;

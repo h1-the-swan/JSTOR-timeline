@@ -210,7 +210,12 @@ d3.json(json_fname, function(error, data_total) {
 
 		var yearMarks = yearItems.append("circle")
 			.attr("class", "yearMark")
-			.on('mouseover', expand)
+			// .on('mouseover', expand)
+			.on('mouseover', function(d) {
+				contract();
+				var sel = paperItems.filter(function(dd) {return dd.year===d.year});
+				expand(sel);
+				})
 			// .on('mouseout', contract)
 			.style(stylesVisible);
 
@@ -327,7 +332,14 @@ d3.json(json_fname, function(error, data_total) {
 		// brush.event(d3.select(".brush").transition().delay(1000).duration(0));
 
 		// This works! (after modifying the display() function. see the note at the top of display())
-		brush.event(mini.select(".brush").transition().delay(1000).duration(1000).call(brush.extent([1970, 2000])));
+		brush.event(mini.select(".brush").transition().delay(1000).duration(1000).call(brush.extent([1970, 2000]))
+				.each("end", function() {console.log("initialized");}));
+
+		// not using this currently
+		function expandAll() {
+			expand(paperItems);
+		}
+		var maxEF = d3.max(data_total, function(d) {return d.eigenfactor_score;});
 
 		
 		function display() {
@@ -478,10 +490,11 @@ d3.json(json_fname, function(error, data_total) {
 		// return y1(d.lane) + 2.2*rad*i+5*rad;
 		return 2.1*mainMinRad*i+3*mainMinRad;
 	};
-	function expand(yearData) {
-		contract();
+	// function expand(yearData) {
+	function expand(sel) {
+		// contract();
 		var dur = 500;
-		var sel = paperItems.filter(function(d) {return d.year===yearData.year});
+		// var sel = paperItems.filter(function(d) {return d.year===yearData.year});
 		sel.style("pointer-events", "none")
 			.transition().duration(dur)
 			.attr("transform", function(d, i) {
@@ -502,7 +515,7 @@ d3.json(json_fname, function(error, data_total) {
 			.style("opacity", 1);
 	}
 	// function contract(yearData) {
-	function contract(yearData) {
+	function contract() {
 		var dur = 500;
 		// var sel = paperItems.filter(function(d) {return d.year===yearData.year});
 		var sel = d3.selectAll(".expanded");

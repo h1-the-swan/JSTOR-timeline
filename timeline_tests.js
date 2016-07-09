@@ -279,17 +279,27 @@ d3.json(json_fname, function(error, data_total) {
 						return "translate(" + d.x + "," + d.y + ")";
 					});
 
+
 				var paperMarks = paperItems.append("text")
 					.attr("class", "paperMark")
 					.style("font-family", "FontAwesome")
 					.text("\uf0f6")
 					// .on('mouseover', expand)
+					.attr("text-anchor", "middle")
 					.on('mouseover', function(d) {
 						contract();
 						var sel = paperItems.filter(function(dd) {return dd.year===d.year});
 						expand(sel);
 						});
 					// .on('mouseout', contract)
+
+				var bbox = paperMarks.node().getBBox();
+				paperItems.insert("rect", ".paperMark")
+					.attr("x", bbox.x)
+					.attr("y", bbox.y)
+					.attr("width", bbox.width)
+					.attr("height", bbox.height)
+					.style("fill", "white");
 
 				var paperLabels = paperItems.append("text")
 					.attr("text-anchor", "end")
@@ -522,15 +532,34 @@ d3.json(json_fname, function(error, data_total) {
 
 					//update main item marks
 					visItems.attr("transform", function(d) {
+						// d.x = x1(d.year) - 10;
 						d.x = x1(d.year);
 						d.y = y1(d.lane) + 20;
 						return "translate(" + d.x + "," + d.y + ")";
 					});
 
 					paperMarks.attr("transform", function(d) {
-								return "translate(" + "0" + "," + d.idx*2 + ")";
+								return "translate(" + d.idx/2 + "," + d.idx*3 + ")";
+								// return "translate(" + "0" + "," + d.idx*3 + ")";
 							})
-						.style("font-size", function(d) {return (d.radius/10) + "em";});
+						.style("fill", "black")
+						.style("opacity", 1)
+						.style("font-size", "1.5em");
+						// .style("font-size", function(d) {return (d.radius/10) + "em";});
+
+					paperItems.each(function(d) {
+						var item = d3.select(this);
+						var m = item.select(".paperMark");
+						var bbox = m.node().getBBox();
+						item.select("rect")
+							.attr("x", bbox.x)
+							.attr("y", bbox.y)
+							.attr("width", bbox.width)
+							.attr("height", bbox.height)
+							.attr("transform", m.attr("transform"))
+							.style("fill", "white");
+						console.log(m.attr("transform"));
+					});
 
 					break;
 				
@@ -651,6 +680,12 @@ d3.json(json_fname, function(error, data_total) {
 			.each("start", function() {d3.select(this).classed("expanded", true)});
 			// .style("pointer-events", "auto");
 		sel.selectAll(".paperMark").transition().duration(dur)
+						// .style("font-size", function(d) {return (d.radius/10) + "em";})
+			.styleTween("font-size", function(d) {
+				return d3.interpolate(
+						this.style.getPropertyValue("font-size"),
+						(d.radius/10) + "em");
+			})
 			.attr("r", function(d) {return d.radius;});
 		//make labels appear
 		sel.selectAll(".paperLabel")
@@ -670,7 +705,10 @@ d3.json(json_fname, function(error, data_total) {
 		console.log(sel.empty());
 		sel.transition().duration(dur)
 			.attr("transform", "translate(0,0)")
-			.each("end", function() {d3.select(this).classed("expanded", false);})
+			.each("end", function() {
+				d3.select(this).classed("expanded", false)
+					.style("pointer-events", "");
+			})
 		sel.selectAll(".paperMark").transition().duration(dur*1.5)
 			.attr("r", 0);
 		sel.selectAll(".paperLabel").style("display", "none");

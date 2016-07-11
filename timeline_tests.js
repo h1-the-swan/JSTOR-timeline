@@ -710,6 +710,11 @@ d3.json(json_fname, function(error, data_total) {
 					.style("pointer-events", "");
 			})
 		sel.selectAll(".paperMark").transition().duration(dur*1.5)
+			.styleTween("font-size", function(d) {
+				return d3.interpolate(
+						this.style.getPropertyValue("font-size"),
+						"1.5em")
+			})
 			.attr("r", 0);
 		sel.selectAll(".paperLabel").style("display", "none");
 	}

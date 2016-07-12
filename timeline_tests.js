@@ -2,11 +2,25 @@
 //
 var json_fname = 'Climate_change.json'
 
+// http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+function getParameterByName(name, url) {
+	if (!url) url = window.location.href;
+	name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+		results = regex.exec(url);
+	if (!results) return null;
+	if (!results[2]) return '';
+	return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
 d3.json(json_fname, function(error, data_total) {
 	data_total.forEach(function(d) {
 		d.lane = 0;
 	});
-	var markType = "icon";  // "icon", "circle"
+	var markType = getParameterByName('m');
+	if ( (markType != 'icon') && (markType != 'circle') ) {
+		markType = 'circle'  // default
+	}
 
 	var dataByYear = d3.nest()
 						.key(function(d) {return d.year;})
@@ -62,7 +76,7 @@ d3.json(json_fname, function(error, data_total) {
 				.domain(d3.extent(dataByYear, function(d) { return d.sum_eigenfactor; }))
 				.range([0, 5]);
 
-		var chart = d3.select("body")
+		var chart = d3.select("#timeline")
 					.append("svg")
 					.attr("width", w + m[1] + m[3])
 					.attr("height", h + m[0] + m[2])

@@ -176,7 +176,8 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("class", "miniItem")
 			.attr("transform", function(d) {
 				d.x = x(d.year);
-				d.y = 0;  // for now
+				// d.y = 0;  // for now
+				d.y = miniHeight / 2;
 				d.radius = 5 + efScale(d.eigenfactor_score);
 				return "translate(" + d.x + "," + d.y + ")";
 			});
@@ -205,7 +206,7 @@ d3.json(json_fname, function(error, data_total) {
 				});
 			}
 		}
-		stackItems(miniItems, y2);
+		// stackItems(miniItems, y2);
 
 		var miniMarks = miniItems.append("circle")
 			.attr("class", "miniMark")

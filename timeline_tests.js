@@ -50,6 +50,8 @@ d3.json(json_fname, function(error, data_total) {
 
 		var mainMinRad = 10;
 
+		var minExtent, maxExtent;  // these will be the lower and upper years displayed in main
+
 		var stylesBase = {
 			'opacity': .2
 		};
@@ -167,6 +169,54 @@ d3.json(json_fname, function(error, data_total) {
 
 		var mainClipPath = main.append("g")
 							.attr("clip-path", "url(#clip)");
+
+		var scrollItems = mainClipPath.append("g")
+							.attr("class", "scrollItems")
+							.attr("transform", "translate(0," + (mainHeight*0.7) + ")");
+		var scrollDur = 150;
+		scrollItems.append("text")
+			.attr("class", "leftArrow")
+			.style("font-family", "FontAwesome")
+			.text("\uf060")
+			.attr("x", 0)
+			// .attr("y", mainHeight / 2)
+			// .style("font-size", "1.5em")
+			.on("click", function() {
+				changeExtent(Math.round(minExtent-1), Math.round(maxExtent-1), scrollDur, "linear");
+				});
+		scrollItems.append("text")
+			.attr("class", "rightArrow")
+			.style("font-family", "FontAwesome")
+			.text("\uf061")
+			.attr("text-anchor", "end")
+			.attr("x", w)
+			// .attr("y", mainHeight / 2)
+			// .style("font-size", "1.5em")
+			.on("click", function() {
+				changeExtent(Math.round(minExtent+1), Math.round(maxExtent+1), scrollDur, "linear");
+				});
+		scrollItems.append("text")
+			.attr("class", "zoomIn")
+			.style("font-family", "FontAwesome")
+			.text("\uf196")  // http://fontawesome.io/icon/plus-square-o/
+			.attr("x", 10)
+			.attr("y", 30)
+			// .attr("y", mainHeight / 2)
+			// .style("font-size", "1.5em")
+			.on("click", function() {
+				changeExtent(Math.round(minExtent+1), Math.round(maxExtent-1), scrollDur, "linear");
+				});
+		scrollItems.append("text")
+			.attr("class", "zoomOut")
+			.style("font-family", "FontAwesome")
+			.text("\uf147")  // http://fontawesome.io/icon/minus-square-o/
+			.attr("x", 10)
+			.attr("y", 50)
+			// .attr("y", mainHeight / 2)
+			// .style("font-size", "1.5em")
+			.on("click", function() {
+				changeExtent(Math.round(minExtent-1), Math.round(maxExtent+1), scrollDur, "linear");
+				});
 		
 		//mini items
 		// note: mouseover events will not play well with the brush
@@ -455,9 +505,25 @@ d3.json(json_fname, function(error, data_total) {
 		// brush(d3.select(".brush").transition().duration(1000));
 		// brush.event(d3.select(".brush").transition().delay(1000).duration(0));
 
+
+		function changeExtent(year1, year2, duration, ease, delay) {
+			if (duration === undefined) {
+				duration = 1000;
+			}
+			if (ease === undefined) {
+				ease = "cubic-in-out";
+			}
+			if (delay === undefined) {
+				delay = 0;
+			}
+			brush.event(mini.select(".brush").transition().delay(delay).duration(duration).ease(ease).call(brush.extent([year1, year2])));
+
+		}
+		//
 		// This works! (after modifying the display() function. see the note at the top of display())
-		brush.event(mini.select(".brush").transition().delay(1000).duration(1000).call(brush.extent([1970, 2000]))
-				.each("end", function() {console.log("initialized");}));
+		// brush.event(mini.select(".brush").transition().delay(1000).duration(1000).call(brush.extent([1970, 2000]))
+		// 		.each("end", function() {console.log("initialized");}));
+		changeExtent(1970, 2000, 1000, "cubic-in-out", 1000);
 
 		// not using this currently
 		function expandAll() {
@@ -476,8 +542,8 @@ d3.json(json_fname, function(error, data_total) {
 			// console.log(x.invert(maxExtentScreen));
 			// var minExtent = brush.extent()[0],
 			// 	maxExtent = brush.extent()[1],
-			var minExtent = x.invert(minExtentScreen),
-				maxExtent = x.invert(maxExtentScreen);
+			minExtent = x.invert(minExtentScreen);
+			maxExtent = x.invert(maxExtentScreen);
 
 			switch (markType) {
 				case 'circle':
@@ -802,4 +868,11 @@ d3.json(json_fname, function(error, data_total) {
 	// 			.remove();
 	// 	}
 	// }
+	
+	var testButton = d3.select("body").append("button")
+						.attr("id", "testButton")
+						.html("testButton")
+						.on("click", function() {
+							changeExtent(Math.round(minExtent+1), Math.round(maxExtent+1), 250, "linear");
+						});
 });

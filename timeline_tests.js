@@ -516,6 +516,12 @@ d3.json(json_fname, function(error, data_total) {
 			if (delay === undefined) {
 				delay = 0;
 			}
+			if (year1 < timeBegin) {
+				year1 = timeBegin;
+			}
+			if (year2 > timeEnd) {
+				year2 = timeEnd;
+			}
 			brush.event(mini.select(".brush").transition().delay(delay).duration(duration).ease(ease).call(brush.extent([year1, year2])));
 
 		}
@@ -544,6 +550,25 @@ d3.json(json_fname, function(error, data_total) {
 			// 	maxExtent = brush.extent()[1],
 			minExtent = x.invert(minExtentScreen);
 			maxExtent = x.invert(maxExtentScreen);
+
+			// hide arrows if you can't go any further
+			if (minExtent <= timeBegin) {
+				d3.select(".leftArrow").style("display", "none");
+			} else {
+				d3.select(".leftArrow").style("display", "");
+			}
+			if (maxExtent >= timeEnd) {
+				d3.select(".rightArrow").style("display", "none");
+			} else {
+				d3.select(".rightArrow").style("display", "");
+			}
+			// hide the zoomIn button if we're zoomed in too far
+			if (maxExtent - minExtent <= 2) {
+				d3.select(".zoomIn").style("display", "none");
+			} else {
+				d3.select(".zoomIn").style("display", "");
+			}
+
 
 			switch (markType) {
 				case 'circle':

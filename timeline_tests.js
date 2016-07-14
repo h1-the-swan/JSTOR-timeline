@@ -551,6 +551,8 @@ d3.json(json_fname, function(error, data_total) {
 			minExtent = x.invert(minExtentScreen);
 			maxExtent = x.invert(maxExtentScreen);
 
+
+
 			// hide arrows if you can't go any further
 			if (minExtent <= timeBegin) {
 				d3.select(".leftArrow").style("display", "none");
@@ -762,6 +764,10 @@ d3.json(json_fname, function(error, data_total) {
 			// _rotate(-20);
 			// relax(labels);
 
+			// Hide main items if the brush is empty
+			if (brush.empty()) {
+				yearItems.style("display", "none");
+			}
 		}
 	
 	var afterTransitionX = function(d, i) {

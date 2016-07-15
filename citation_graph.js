@@ -4,12 +4,12 @@ d3.json(json_fname, function(error, data) {
 	var w = 960,
 		h = 400;
 	var efScale = d3.scale.linear()
-			.domain(d3.extent(data, function(d) { return d.eigenfactor_score; }))
+			.domain(d3.extent(data.nodes, function(d) { return d.eigenfactor_score; }))
 			.range([0, 5]);
 
 	var force = d3.layout.force()
 				.charge(-60)
-				.linkDistance(12)
+				.linkDistance(30)
 				.size([w,h]);
 
 	console.log(data);
@@ -33,7 +33,9 @@ d3.json(json_fname, function(error, data) {
 		.enter().append("g");
 	node.append("circle")
 		.attr("class", "node")
-		.attr("r", 6)
+		.attr("r", function(d) {
+			return 4 + efScale(d.eigenfactor_score);
+			})
 		.style("fill", "darksalmon")
 		.call(force.drag);
 

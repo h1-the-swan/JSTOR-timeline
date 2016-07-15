@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width">
+		<title>JSTOR Topic Citation Graph</title>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+		<script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+		<!-- <script src="d3.v3.js" charset="utf&#45;8"></script> -->
+		<link rel="stylesheet" href="font-awesome-4.6.3/css/font-awesome.min.css" type="text/css">
+		<style type="text/css">
+		.chart {
+			shape-rendering: crispEdges;
+		}
+
+		g {
+			overflow: visible;
+		}
+		/* text:hover{ */
+		/* 	font: 1em sans-serif;	 */
+		/* } */
+
+		.yearItem circle {
+			fill: darksalmon;
+			fill-opacity: .7;
+			stroke-width: 6;	
+		}
+		.yearItem:hover {
+			fill: blue;
+		}
+
+		.yearItemLabel {
+			pointer-events: none;
+		}
+
+		.paperItem {
+			fill: blue;
+			fill-opacity: .5;
+			stroke-width: 6;	
+		}
+
+		.brush {
+			pointer-events: none;
+		}
+
+		circle {
+			pointer-events: inherit;
+		}
+
+		.brush .extent {
+			stroke: gray;
+			fill: dodgerblue;
+			fill-opacity: .365;
+		}
+
+		text.numIndicator {
+			fill: black;
+			color: black;
+			font-weight: bold;
+			pointer-events: none;
+		}
+
+		.extentLine {
+			stroke: gray;
+			stroke-dasharray: 5,5;
+		}
+
+		.scrollItems {
+			cursor: pointer;
+			font-size: 1.5em;
+		}
+
+		.scrollItems text {
+			font-size: 1em;
+		}
+
+		.link {
+			stroke: black;
+			stroke-width: 1;
+		}
+
+		.node {
+			stroke: black;
+			stroke-width: 1;
+		}
+
+		.nodeLabel {
+			font-size: .8em;
+			cursor: pointer;
+		}
+
+		</style>
+	</head>
+	<body>
+		<h1>Topic: Climate Change</h1>
+		<div id="graph"></div>
+		<a href="?m=circle">Circles</a> <br>
+		<a href="?m=icon">Icons</a>
+		<script src="citation_graph.js" charset="utf-8"></script>
+	</body>
+</html>
+

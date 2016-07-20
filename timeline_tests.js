@@ -899,11 +899,42 @@ d3.json(json_fname, function(error, data_total) {
 	// 			.remove();
 	// 	}
 	// }
+
+	function demoExpand() {
+		var demoTransitionTime = 2000;
+		var demoDelayToRemove = 2000;
+		var cursorIcon = mainClipPath.append("text")
+			.attr("class", "cursorIcon")
+			.style("font-family", "FontAwesome")
+			.text("\uf245")
+			// .attr("x", 100)
+			// .attr("y", 300);
+			// .attr("transform", "translate(100,300)");
+			.attr("transform", "translate(" + w + "," + mainHeight + ")");
+
+		var demoYearItem = d3.select($( '.yearItem' )[17]);
+		var demoYearMark = demoYearItem.select(".yearMark");
+		var translate = demoYearItem.attr("transform");
+		// move the cursor to a year, then manually expand the year
+		cursorIcon.transition("demoExpand").duration(demoTransitionTime)
+			.attr("transform", translate)
+			.each("end", function() {
+				var sel = paperItems.filter(function(dd) {return dd.year==demoYearItem[0][0].__data__.year});
+				expand(sel);
+			});
+		cursorIcon.transition("demoEnd").delay(demoTransitionTime)
+			.duration(demoDelayToRemove)
+			.each("end", function() {
+				cursorIcon.remove();
+				contract();
+			});
+	}
 	
 	var testButton = d3.select("body").append("button")
 						.attr("id", "testButton")
 						.html("testButton")
 						.on("click", function() {
-							changeExtent(Math.round(minExtent+1), Math.round(maxExtent+1), 250, "linear");
+							// changeExtent(Math.round(minExtent+1), Math.round(maxExtent+1), 250, "linear");
+							demoExpand();
 						});
 });

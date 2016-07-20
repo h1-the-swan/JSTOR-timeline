@@ -306,17 +306,15 @@ d3.json(json_fname, function(error, data_total) {
 						d.idx = i;
 						d.radius = mainMinRad + (2 * efScale(d.eigenfactor_score));
 						return "translate(" + d.x + "," + d.y + ")";
+					})
+					.on("click", function(d) {
+						var url = "http://labs.jstor.org" + d.stable_url;
+						window.open(url,'_blank');
 					});
 
 				var paperMarks = paperItems.append("circle")
 					.attr("r", 0)  //for now
 					.attr("class", "paperMark");
-
-				var paperLabels = paperItems.append("text")
-					.attr("text-anchor", "end")
-					.attr("class", "paperLabel")
-					.style("display", "none")
-					.text(function(d) {return d.title;})
 
 				break;
 			
@@ -366,11 +364,6 @@ d3.json(json_fname, function(error, data_total) {
 					.attr("height", bbox.height)
 					.style("fill", "white");
 
-				var paperLabels = paperItems.append("text")
-					.attr("text-anchor", "end")
-					.attr("class", "paperLabel")
-					.style("display", "none")
-					.text(function(d) {return d.title;})
 				// //main items
 				// var paperItems = mainClipPath.append("g").selectAll(".paperItem")
 				// 	.data(data_total)
@@ -421,6 +414,11 @@ d3.json(json_fname, function(error, data_total) {
 		}
 
 
+		var paperLabels = paperItems.append("text")
+			.attr("text-anchor", "end")
+			.attr("class", "paperLabel")
+			.style("display", "none")
+			.text(function(d) {return d.title;});
 
 
 
@@ -529,7 +527,11 @@ d3.json(json_fname, function(error, data_total) {
 		// This works! (after modifying the display() function. see the note at the top of display())
 		// brush.event(mini.select(".brush").transition().delay(1000).duration(1000).call(brush.extent([1970, 2000]))
 		// 		.each("end", function() {console.log("initialized");}));
-		changeExtent(1970, 2000, 1000, "cubic-in-out", 1000);
+		var initDuration = 1000,
+			initDelay = 1000;
+		changeExtent(1970, 2000, initDuration, "cubic-in-out", initDelay);
+		d3.transition("initDemoTransition").delay(initDelay + initDuration)
+			.each("end", demoExpand);
 
 		// not using this currently
 		function expandAll() {
@@ -784,12 +786,18 @@ d3.json(json_fname, function(error, data_total) {
 		// contract();
 		var dur = 500;
 		// var sel = paperItems.filter(function(d) {return d.year===yearData.year});
-		sel.style("pointer-events", "none")
+		var transitionStartStyle = {'pointer-events': 'none', 'cursor': 'default'},
+			transitionEndStyle = {'pointer-events': 'auto', 'cursor': 'pointer'};
+		// sel.style("pointer-events", "none")
+		sel.style(transitionStartStyle)
 			.transition().duration(dur)
 			.attr("transform", function(d, i) {
 				return "translate(" + afterTransitionX(d, i) + "," + afterTransitionY(d, i) + ")";
 			})
-			.each("start", function() {d3.select(this).classed("expanded", true)});
+			.each("start", function() {d3.select(this).classed("expanded", true)})
+			// .each("end", function() {d3.select(this).style("pointer-events", "auto");});
+			.each("end", function() {d3.select(this).style(transitionEndStyle);});
+			
 			// .style("pointer-events", "auto");
 		sel.selectAll(".paperMark").transition().duration(dur)
 						// .style("font-size", function(d) {return (d.radius/10) + "em";})
@@ -801,7 +809,7 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("r", function(d) {return d.radius;});
 		//make labels appear
 		sel.selectAll(".paperLabel")
-			.style("pointer-events", "none")
+			// .style("pointer-events", "none")
 			.style("display", "")
 			.style("opacity", 0)
 			.transition()

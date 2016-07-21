@@ -186,53 +186,6 @@ d3.json(json_fname, function(error, data_total) {
 		var mainClipPath = main.append("g")
 							.attr("clip-path", "url(#clip)");
 
-		var scrollItems = mainClipPath.append("g")
-							.attr("class", "scrollItems")
-							.attr("transform", "translate(0," + (mainHeight*0.7) + ")");
-		var scrollDur = 150;
-		scrollItems.append("text")
-			.attr("class", "leftArrow")
-			.style("font-family", "FontAwesome")
-			.text("\uf060")
-			.attr("x", 0)
-			// .attr("y", mainHeight / 2)
-			// .style("font-size", "1.5em")
-			.on("click", function() {
-				changeExtent(Math.round(minExtent-1), Math.round(maxExtent-1), scrollDur, "linear");
-				});
-		scrollItems.append("text")
-			.attr("class", "rightArrow")
-			.style("font-family", "FontAwesome")
-			.text("\uf061")
-			.attr("text-anchor", "end")
-			.attr("x", w)
-			// .attr("y", mainHeight / 2)
-			// .style("font-size", "1.5em")
-			.on("click", function() {
-				changeExtent(Math.round(minExtent+1), Math.round(maxExtent+1), scrollDur, "linear");
-				});
-		scrollItems.append("text")
-			.attr("class", "zoomIn")
-			.style("font-family", "FontAwesome")
-			.text("\uf196")  // http://fontawesome.io/icon/plus-square-o/
-			.attr("x", 10)
-			.attr("y", 30)
-			// .attr("y", mainHeight / 2)
-			// .style("font-size", "1.5em")
-			.on("click", function() {
-				changeExtent(Math.round(minExtent+1), Math.round(maxExtent-1), scrollDur, "linear");
-				});
-		scrollItems.append("text")
-			.attr("class", "zoomOut")
-			.style("font-family", "FontAwesome")
-			.text("\uf147")  // http://fontawesome.io/icon/minus-square-o/
-			.attr("x", 10)
-			.attr("y", 50)
-			// .attr("y", mainHeight / 2)
-			// .style("font-size", "1.5em")
-			.on("click", function() {
-				changeExtent(Math.round(minExtent-1), Math.round(maxExtent+1), scrollDur, "linear");
-				});
 		
 		//mini items
 		// note: mouseover events will not play well with the brush
@@ -248,6 +201,7 @@ d3.json(json_fname, function(error, data_total) {
 				return "translate(" + d.x + "," + d.y + ")";
 			});
 
+		// not currently using this
 		function stackItems(items, scale) {
 			var yearsList = [];
 			items.each(function(d) {
@@ -480,9 +434,102 @@ d3.json(json_fname, function(error, data_total) {
 			}
 		}
 
+		var scrollDur = 150;
+		function moveBrush(direction) {
+			switch (direction) {
+				case 'left':
+					changeExtent(Math.round(minExtent-1), Math.round(maxExtent-1), scrollDur, "linear");
+					break;
+
+				case 'right':
+					changeExtent(Math.round(minExtent+1), Math.round(maxExtent+1), scrollDur, "linear");
+					break;
+
+				case 'zoomIn':
+					changeExtent(Math.round(minExtent+1), Math.round(maxExtent-1), scrollDur, "linear");
+					break;
+
+				case 'zoomOut':
+					changeExtent(Math.round(minExtent-1), Math.round(maxExtent+1), scrollDur, "linear");
+					break;
+					
+			}
+			return;
+		}
+
+		var scrollItems = mainClipPath.append("g")
+							.attr("class", "scrollItems")
+							.attr("transform", "translate(0," + (mainHeight*0.7) + ")");
+		scrollItems.append("text")
+			.attr("class", "leftArrow")
+			.style("font-family", "FontAwesome")
+			.text("\uf060")
+			.attr("x", 0)
+			// .attr("y", mainHeight / 2)
+			// .style("font-size", "1.5em")
+			.on("click", function() {
+				// changeExtent(Math.round(minExtent-1), Math.round(maxExtent-1), scrollDur, "linear");
+				moveBrush('left');
+				});
+		scrollItems.append("text")
+			.attr("class", "rightArrow")
+			.style("font-family", "FontAwesome")
+			.text("\uf061")
+			.attr("text-anchor", "end")
+			.attr("x", w)
+			// .attr("y", mainHeight / 2)
+			// .style("font-size", "1.5em")
+			.on("click", function() {
+				// changeExtent(Math.round(minExtent+1), Math.round(maxExtent+1), scrollDur, "linear");
+				moveBrush('right');
+				});
+		scrollItems.append("text")
+			.attr("class", "zoomIn")
+			.style("font-family", "FontAwesome")
+			.text("\uf196")  // http://fontawesome.io/icon/plus-square-o/
+			.attr("x", 10)
+			.attr("y", 30)
+			// .attr("y", mainHeight / 2)
+			// .style("font-size", "1.5em")
+			.on("click", function() {
+				// changeExtent(Math.round(minExtent+1), Math.round(maxExtent-1), scrollDur, "linear");
+				moveBrush('zoomIn')
+				});
+		scrollItems.append("text")
+			.attr("class", "zoomOut")
+			.style("font-family", "FontAwesome")
+			.text("\uf147")  // http://fontawesome.io/icon/minus-square-o/
+			.attr("x", 10)
+			.attr("y", 50)
+			// .attr("y", mainHeight / 2)
+			// .style("font-size", "1.5em")
+			.on("click", function() {
+				// changeExtent(Math.round(minExtent-1), Math.round(maxExtent+1), scrollDur, "linear");
+				moveBrush('zoomOut');
+				});
+
+		// Icon to clear the brush. Finish initializing it in display()
+		// var clearBrushIcon = d3.select(".brush").append("text")
+		var clearBrushIcon = mini.append("text")
+			.attr("class", "clearBrushIcon")
+			.style("font-family", "FontAwesome")
+			.style("font-size", "1em")
+			.attr("text-anchor", "end")
+			.text("\uf00d");
+
+		d3.select(".brush")
+			.on("wheel.zoom", function() {
+				if (d3.event.wheelDeltaY>0) {
+					moveBrush('zoomIn');
+				} else if (d3.event.wheelDeltaY<0) {
+					moveBrush('zoomOut');
+				}
+			});
+
 		// initialize brush
 		var brushInit = [
-			1975, 1990
+			// 1975, 1990
+			1970, 1970
 			];
 		// brush.extent(brushInit);
 		mini.select(".brush").call(brush.extent(brushInit));
@@ -544,11 +591,12 @@ d3.json(json_fname, function(error, data_total) {
 		// This works! (after modifying the display() function. see the note at the top of display())
 		// brush.event(mini.select(".brush").transition().delay(1000).duration(1000).call(brush.extent([1970, 2000]))
 		// 		.each("end", function() {console.log("initialized");}));
-		var initDuration = 1000,
-			initDelay = 1000;
-		changeExtent(1970, 2000, initDuration, "cubic-in-out", initDelay);
-		d3.transition("initDemoTransition").delay(initDelay + initDuration)
-			.each("end", demoExpand);
+		// var initDuration = 1000,
+		// 	initDelay = 1000;
+		// changeExtent(1970, 2000, initDuration, "cubic-in-out", initDelay);
+		// d3.transition("initDemoTransition").delay(initDelay + initDuration)
+		// 	.each("end", demoExpand);
+		demoInit();
 
 		// not using this currently
 		function expandAll() {
@@ -588,6 +636,21 @@ d3.json(json_fname, function(error, data_total) {
 				d3.select(".zoomIn").style("display", "none");
 			} else {
 				d3.select(".zoomIn").style("display", "");
+			}
+
+			if (brush.empty()) {
+				clearBrushIcon.style("display", "none");
+			} else {
+				clearBrushIcon.style("display", "")
+					.style("opacity", 0)
+					// .style("z-index", -99)
+					.attr("transform", constructTranslate(maxExtentScreen-2, 15))
+					.transition().duration(300)
+					.style("opacity", 1);
+				clearBrushIcon.on("click", function() {
+					var mid = (brush.extent()[1] + brush.extent()[0]) / 2;
+					changeExtent(mid, mid, 0);
+				});
 			}
 
 
@@ -924,11 +987,17 @@ d3.json(json_fname, function(error, data_total) {
 	// 			.remove();
 	// 	}
 	// }
-
-	function demoExpand() {
-		var demoTransitionTime = 2000;
-		var demoDelayToRemove = 2000;
-		var cursorIcon = mainClipPath.append("text")
+	
+	function demoInit() {
+		var transitionTimes = [
+				750,  // 0: initial delay before anything happens
+				1000,  // 1: time to move the cursor to the mini area
+				2000,  // 2: time to draw the initial brush
+				200,   // 3: delay after brush
+				2000,  // 4: time to move the cursor to a main item
+				3000,  // 5: delay to remove and end the demo
+			];
+		var cursorIcon = chart.append("text")
 			.attr("class", "cursorIcon")
 			.style("font-family", "FontAwesome")
 			.style("font-size", "1em")
@@ -937,27 +1006,101 @@ d3.json(json_fname, function(error, data_total) {
 			// .attr("y", 300);
 			// .attr("transform", "translate(100,300)");
 			.attr("transform", "translate(" + w + "," + mainHeight + ")");
+		// var initDuration = 1000,
+		// 	initDelay = 1000;
+		// changeExtent(1970, 2000, initDuration, "cubic-in-out", initDelay);
+		// d3.transition("initDemoTransition").delay(initDelay + initDuration)
+		// 	.each("end", demoExpand);
+		var extentSelect = mini.select(".brush").select(".extent");
+		var initBrushRange = [1970, 2000],
+			initBrushPosition = +extentSelect.attr("x");
+		cursorIcon.transition().delay(transitionTimes[0])
+			.duration(transitionTimes[1])
+			.attr("transform", 
+					constructTranslate(initBrushPosition+15, mainHeight+m[0]+(miniHeight/2))
+					)
+			.each("end", function() {
+				demoDrawBrush();
+			});
 
-		var demoYearItem = d3.select($( '.yearItem' )[17]);
-		var demoYearMark = demoYearItem.select(".yearMark");
-		var translateStr = demoYearItem.attr("transform");
-		console.log(translateStr);
-		var translateCoord = deconstructTranslate(translateStr);
-		translateCoord.y = translateCoord.y + 20;
-		var translate = constructTranslate(translateCoord.x, translateCoord.y);
-		// move the cursor to a year, then manually expand the year
-		cursorIcon.transition("demoExpand").duration(demoTransitionTime)
-			.attr("transform", translate)
-			.each("end", function() {
-				var sel = paperItems.filter(function(dd) {return dd.year==demoYearItem[0][0].__data__.year});
-				expand(sel);
-			});
-		cursorIcon.transition("demoEnd").delay(demoTransitionTime)
-			.duration(demoDelayToRemove)
-			.each("end", function() {
-				cursorIcon.remove();
-				contract();
-			});
+		function demoDrawBrush() {
+			changeExtent(initBrushRange[0], initBrushRange[1], transitionTimes[2]);
+			var minExtentScreen = +extentSelect.attr("x");
+			var maxExtentScreen = minExtentScreen + (+extentSelect.attr("width"));
+			console.log(brush.extent());
+			x1.domain(brush.extent());
+			cursorIcon.transition()
+				.duration(transitionTimes[2])
+				.attr("transform", function() {
+					var xPos = x(brush.extent()[1]) + m[3];
+					return constructTranslate(xPos, mainHeight+m[0]+(miniHeight/2));
+				})
+			.each("end", demoExpand);
+		}
+		
+		function demoExpand() {
+			// var demoTransitionTime = 2000;
+			// var demoDelayToRemove = 2000;
+			// var cursorIcon = mainClipPath.append("text")
+			// 	.attr("class", "cursorIcon")
+			// 	.style("font-family", "FontAwesome")
+			// 	.style("font-size", "1em")
+			// 	.text("\uf245")
+			// 	// .attr("x", 100)
+			// 	// .attr("y", 300);
+			// 	// .attr("transform", "translate(100,300)");
+			// 	.attr("transform", "translate(" + w + "," + mainHeight + ")");
+
+			var demoYearItem = d3.select($( '.yearItem' )[17]);
+			var demoYearMark = demoYearItem.select(".yearMark");
+			var translateStr = demoYearItem.attr("transform");
+			console.log(translateStr);
+			var translateCoord = deconstructTranslate(translateStr);
+			translateCoord.x = translateCoord.x + m[0];
+			translateCoord.y = translateCoord.y + m[3] + 20;
+			var translate = constructTranslate(translateCoord.x, translateCoord.y);
+			// move the cursor to a year, then manually expand the year
+			cursorIcon.transition("demoExpand").delay(transitionTimes[3])
+				.duration(transitionTimes[4])
+				.attr("transform", translate)
+				.each("end", function() {
+					var sel = paperItems.filter(function(dd) {return dd.year==demoYearItem[0][0].__data__.year});
+					expand(sel);
+					demoEnd();
+				});
+			// cursorIcon.transition("demoEnd").delay(demoTransitionTime)
+			// 	.duration(demoDelayToRemove)
+			// 	.each("end", function() {
+			// 		cursorIcon.remove();
+			// 		contract();
+			// 	});
+		}
+
+		function demoEnd() {
+			cursorIcon.transition("demoEnd")
+				.delay(transitionTimes[5])
+				.duration(0)
+				.remove()
+				.each("end", contract);
+			
+		}
+	}
+
+
+	function testPlaceCursor() {
+		var extentSelect = mini.select(".brush").select(".extent");
+		console.log(extentSelect);
+		var minExtentScreen = +extentSelect.attr("x");
+		var cursorIcon = mainClipPath.append("text")
+			.attr("class", "cursorIcon")
+			.style("font-family", "FontAwesome")
+			.style("font-size", "1em")
+			.text("\uf245")
+			// .attr("x", 100)
+			// .attr("y", 300);
+			// .attr("transform", "translate(100,300)");
+			.attr("transform", "translate(" + minExtentScreen + "," + (mainHeight-20) + ")");
+		
 	}
 	
 	var testButton = d3.select("body").append("button")
@@ -965,6 +1108,6 @@ d3.json(json_fname, function(error, data_total) {
 						.html("testButton")
 						.on("click", function() {
 							// changeExtent(Math.round(minExtent+1), Math.round(maxExtent+1), 250, "linear");
-							demoExpand();
+							demoInit();
 						});
 });

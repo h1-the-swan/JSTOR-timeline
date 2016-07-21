@@ -13,6 +13,22 @@ function getParameterByName(name, url) {
 	return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
+function deconstructTranslate(translateString) {
+	// takes a string like "translate(100,200)" and returns the numbers [100, 200]
+	translateString = translateString.replace("(", "").replace(")", "");
+	var regex = new RegExp(/translate([\d\.]+),([\d\.]+)/);
+	var match = regex.exec(translateString);
+	return {
+		x: +match[1],
+		y: +match[2]
+	};
+}
+
+function constructTranslate(x, y) {
+	return "translate(" + x + "," + y + ")";
+}
+
+
 d3.json(json_fname, function(error, data_total) {
 	data_total.forEach(function(d) {
 		d.lane = 0;
@@ -418,6 +434,7 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("text-anchor", "end")
 			.attr("class", "paperLabel")
 			.style("display", "none")
+			.attr("transform", "translate(-15,0)")  // nudge left
 			.text(function(d) {return d.title;});
 
 
@@ -914,6 +931,7 @@ d3.json(json_fname, function(error, data_total) {
 		var cursorIcon = mainClipPath.append("text")
 			.attr("class", "cursorIcon")
 			.style("font-family", "FontAwesome")
+			.style("font-size", "1em")
 			.text("\uf245")
 			// .attr("x", 100)
 			// .attr("y", 300);
@@ -922,7 +940,11 @@ d3.json(json_fname, function(error, data_total) {
 
 		var demoYearItem = d3.select($( '.yearItem' )[17]);
 		var demoYearMark = demoYearItem.select(".yearMark");
-		var translate = demoYearItem.attr("transform");
+		var translateStr = demoYearItem.attr("transform");
+		console.log(translateStr);
+		var translateCoord = deconstructTranslate(translateStr);
+		translateCoord.y = translateCoord.y + 20;
+		var translate = constructTranslate(translateCoord.x, translateCoord.y);
 		// move the cursor to a year, then manually expand the year
 		cursorIcon.transition("demoExpand").duration(demoTransitionTime)
 			.attr("transform", translate)

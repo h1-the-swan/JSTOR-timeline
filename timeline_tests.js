@@ -184,6 +184,7 @@ d3.json(json_fname, function(error, data_total) {
 			.call(xAxisMain);
 
 		var mainClipPath = main.append("g")
+							.attr("class", "mainClipPath")
 							.attr("clip-path", "url(#clip)");
 
 		
@@ -277,6 +278,10 @@ d3.json(json_fname, function(error, data_total) {
 						d.radius = mainMinRad + (2 * efScale(d.eigenfactor_score));
 						return "translate(" + d.x + "," + d.y + ")";
 					})
+					.on("mouseover", function(d) {
+							// var t = d3.select(this).select('.paperLabel');
+							console.log(this.getBoundingClientRect());
+						})
 					.on("click", function(d) {
 						var url = "http://labs.jstor.org" + d.stable_url;
 						window.open(url,'_blank');
@@ -850,6 +855,8 @@ d3.json(json_fname, function(error, data_total) {
 			if (brush.empty()) {
 				yearItems.style("display", "none");
 			}
+			// console.log($('.mainClipPath')[0].getBoundingClientRect());
+			// console.log($('.chart')[0].getBoundingClientRect());
 		}
 	
 	var afterTransitionX = function(d, i) {

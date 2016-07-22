@@ -41,7 +41,8 @@ d3.json(json_fname, function(error, data_total) {
 	var dataByYear = d3.nest()
 						.key(function(d) {return d.year;})
 						.sortValues(function(a, b) {
-							return d3.descending(a.eigenfactor_score, b.eigenfactor_score);
+							// return d3.descending(a.eigenfactor_score, b.eigenfactor_score);
+							return d3.ascending(a.pubdate, b.pubdate);
 						})
 						// .map(data_total, d3.map);
 						.entries(data_total);
@@ -198,7 +199,8 @@ d3.json(json_fname, function(error, data_total) {
 				d.x = x(d.year);
 				// d.y = 0;  // for now
 				d.y = miniHeight / 2;
-				d.radius = 5 + efScale(d.eigenfactor_score);
+				// d.radius = 5 + efScale(d.eigenfactor_score);
+				d.radius = 1 + ( efScale(d.eigenfactor_score) );
 				return "translate(" + d.x + "," + d.y + ")";
 			});
 
@@ -280,7 +282,8 @@ d3.json(json_fname, function(error, data_total) {
 					})
 					.on("mouseover", function(d) {
 							// var t = d3.select(this).select('.paperLabel');
-							console.log(this.getBoundingClientRect());
+							// console.log(this.getBoundingClientRect());
+							console.log(d.pubdate);
 						})
 					.on("click", function(d) {
 						var url = "http://labs.jstor.org" + d.stable_url;
@@ -522,8 +525,7 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("text-anchor", "end")
 			.text("\uf00d");
 
-		d3.select(".brush")
-			.on("wheel.zoom", function() {
+		chart.on("wheel.zoom", function() {
 				if (d3.event.wheelDeltaY>0) {
 					moveBrush('zoomIn');
 				} else if (d3.event.wheelDeltaY<0) {
@@ -869,7 +871,6 @@ d3.json(json_fname, function(error, data_total) {
 	};
 	// function expand(yearData) {
 	function expand(sel) {
-		console.log(sel);
 		// contract();
 		var dur = 500;
 		// var sel = paperItems.filter(function(d) {return d.year===yearData.year});

@@ -523,6 +523,7 @@ d3.json(json_fname, function(error, data_total) {
 			.style("font-family", "FontAwesome")
 			.style("font-size", "1em")
 			.attr("text-anchor", "end")
+			.attr("title", "Clear the timeline in order to draw a new region")
 			.text("\uf00d");
 
 		chart.on("wheel.zoom", function() {

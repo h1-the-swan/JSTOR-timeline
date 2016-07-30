@@ -5,8 +5,18 @@
 		<meta name="viewport" content="width=device-width">
 		<title>D3 Timeline Test</title>
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+		<script type="text/javascript" charset="utf-8">
+			$( function() {
+				$( document ).tooltip({
+					track: true,
+					position: { my: "left+10 bottom" }
+				});
+			} );
+		</script>
 		<script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 		<!-- <script src="d3.v3.js" charset="utf&#45;8"></script> -->
+		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
 		<link rel="stylesheet" href="font-awesome-4.6.3/css/font-awesome.min.css" type="text/css">
 		<style type="text/css">
 		.chart {
@@ -87,6 +97,15 @@
 
 		.scrollItems text {
 			font-size: 1em;
+		}
+
+		.clearBrushIcon {
+			cursor: default;
+		}
+
+		.ui-tooltip {
+			font: 12px sans-serif;	
+			opacity: .8;
 		}
 
 		</style>

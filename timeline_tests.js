@@ -532,6 +532,11 @@ d3.json(json_fname, function(error, data_total) {
 				} else if (d3.event.wheelDeltaY<0) {
 					moveBrush('zoomOut');
 				}
+				if (d3.event.wheelDeltaX>0) {
+					moveBrush('left');
+				} else if (d3.event.wheelDeltaX<0) {
+					moveBrush('right');
+				}
 			});
 
 		// initialize brush

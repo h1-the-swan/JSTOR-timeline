@@ -768,6 +768,7 @@ d3.json(json_fname, function(error, data_total) {
 				
 			}
 
+
 			//update the item labels
 			// var rotate = -20;
 			function _rotate(rotation) {
@@ -865,6 +866,7 @@ d3.json(json_fname, function(error, data_total) {
 			}
 			// console.log($('.mainClipPath')[0].getBoundingClientRect());
 			// console.log($('.chart')[0].getBoundingClientRect());
+			labelsCollisionDetect();
 		}
 	
 	var afterTransitionX = function(d, i) {
@@ -901,6 +903,7 @@ d3.json(json_fname, function(error, data_total) {
 						(d.radius/10) + "em");
 			})
 			.attr("r", function(d) {return d.radius;});
+
 		//make labels appear
 		sel.selectAll(".paperLabel")
 			// .style("pointer-events", "none")
@@ -910,6 +913,8 @@ d3.json(json_fname, function(error, data_total) {
 			.delay(function(d) {return dur/2 + d.idx*75;})
 			.duration(dur)
 			.style("opacity", 1);
+		// labelsCollisionDetect();
+		d3.transition().duration(dur).each("end", display);
 	}
 	// function contract(yearData) {
 	function contract() {
@@ -1001,6 +1006,23 @@ d3.json(json_fname, function(error, data_total) {
 	// 			.remove();
 	// 	}
 	// }
+
+	function labelsCollisionDetect() {
+		// detect if labels go off screen
+
+		function checkSingleLabel(d) {
+			var boundingRect = this.getBoundingClientRect();
+			console.log($( this ).position());
+			console.log($( this ).outerWidth());
+			if ($( this ).position().left<0) {
+				d3.select(this).select(".paperLabel").attr("text-anchor", "start");
+			} else {
+				d3.select(this).select(".paperLabel").attr("text-anchor", "end");
+			}
+		}
+		d3.selectAll(".paperItem.expanded")
+			.each(checkSingleLabel);
+	}
 	
 	function demoInit() {
 		var transitionTimes = [

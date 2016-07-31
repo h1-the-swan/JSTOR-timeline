@@ -280,6 +280,16 @@ d3.json(json_fname, function(error, data_total) {
 						d.radius = mainMinRad + (2 * efScale(d.eigenfactor_score));
 						return "translate(" + d.x + "," + d.y + ")";
 					})
+					.attr("title", function(d) {
+							var text = d.title
+										+ ", "
+										+ d.authors.join(", ")
+										+ ", "
+										+ d.journal
+										+ ", "
+										+ d.year;
+							return text;
+						})
 					.on("mouseover", function(d) {
 							// var t = d3.select(this).select('.paperLabel');
 							// console.log(this.getBoundingClientRect());
@@ -1010,15 +1020,48 @@ d3.json(json_fname, function(error, data_total) {
 	function labelsCollisionDetect() {
 		// detect if labels go off screen
 
+		// function checkSingleLabel(d) {
+		// 	var boundingRect = this.getBoundingClientRect();
+		// 	console.log(boundingRect.width + $( this ).position().left);
+		// 	if ($( this ).position().left<0) {
+		// 		d3.select(this).select(".paperLabel").attr("text-anchor", "start");
+		// 	} else {
+		// 		d3.select(this).select(".paperLabel").attr("text-anchor", "end");
+		// 	}
+		// }
 		function checkSingleLabel(d) {
-			var boundingRect = this.getBoundingClientRect();
-			console.log($( this ).position());
-			console.log($( this ).outerWidth());
-			if ($( this ).position().left<0) {
-				d3.select(this).select(".paperLabel").attr("text-anchor", "start");
-			} else {
-				d3.select(this).select(".paperLabel").attr("text-anchor", "end");
+			// var boundingRect = this.getBoundingClientRect();
+			var thisLabel = d3.select(this).select(".paperLabel");
+			// var words = thisLabel.text().split(" ");
+			thisLabel.text(d.title);
+			var words = d.title.split(" ");
+			console.log(words);
+			var giveUpThreshold = 20;
+			var i = 0;
+			while (true) {
+				i++;
+				if (i>giveUpThreshold) {
+					break;
+				}
+				var leftPos = $( this ).position().left;
+				if (leftPos < 0) {
+					var numWords = words.length;
+					words = words.slice(0, numWords-2);
+					thisLabel.text(words.join(" ")+"...");
+				} else {
+					break;
+				}
 			}
+			// var leftPos = $( this ).position().left;
+			//
+			// if (leftPos<0) {
+			// 	d3.select(this).select(".paperLabel")
+			// 		.text(d.title.slice(0, 10));
+			// 	checkSingleLabel(d);
+			// } else {
+			// 	console.log('leaving recursive function')
+			// }
+			// return;
 		}
 		d3.selectAll(".paperItem.expanded")
 			.each(checkSingleLabel);

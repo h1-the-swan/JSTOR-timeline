@@ -287,6 +287,7 @@ d3.json(json_fname, function(error, data_total) {
 						return "translate(" + d.x + "," + d.y + ")";
 					})
 					.attr("title", function(d) {
+							// for tooltip
 							var text = d.title
 										+ ", "
 										+ d.authors.join(", ")
@@ -303,7 +304,7 @@ d3.json(json_fname, function(error, data_total) {
 						})
 					.on("click", function(d) {
 						var url = "http://labs.jstor.org" + d.stable_url;
-						window.open(url,'_blank');
+						// window.open(url,'_blank');
 					});
 
 				var paperMarks = paperItems.append("circle")
@@ -413,7 +414,8 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("class", "paperLabel")
 			.style("display", "none")
 			.attr("transform", "translate(-15,0)")  // nudge left
-			.text(function(d) {return d.title;});
+			// .text(function(d) {return d.title;});
+			.html(function(d) {return '<a target="_blank" href="http://labs.jstor.org' + d.stable_url + '">' + d.title + '</a>';});
 
 
 
@@ -1037,10 +1039,14 @@ d3.json(json_fname, function(error, data_total) {
 		// 	}
 		// }
 		function checkSingleLabel(d) {
+			function wrapInAnchor(stable_url, text) {
+				return '<a target="_blank" href="http://labs.jstor.org' + stable_url + '">' + text + '</a>'
+			}
 			// var boundingRect = this.getBoundingClientRect();
 			var thisLabel = d3.select(this).select(".paperLabel");
 			// var words = thisLabel.text().split(" ");
-			thisLabel.text(d.title);
+			// thisLabel.text(d.title);
+			thisLabel.html(wrapInAnchor(d.stable_url, d.title));
 			var words = d.title.split(" ");
 			console.log(words);
 			var giveUpThreshold = 20;
@@ -1054,7 +1060,9 @@ d3.json(json_fname, function(error, data_total) {
 				if (leftPos < 0) {
 					var numWords = words.length;
 					words = words.slice(0, numWords-2);
-					thisLabel.text(words.join(" ")+"...");
+					var shortenedTitle = words.join(" ")+"...";
+					// thisLabel.text(words.join(" ")+"...");
+					thisLabel.html(wrapInAnchor(d.stable_url, shortenedTitle));
 				} else {
 					break;
 				}

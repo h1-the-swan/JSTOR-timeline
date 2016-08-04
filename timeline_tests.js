@@ -13,6 +13,12 @@ function getParameterByName(name, url) {
 	return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
+var urlTopicName = getParameterByName('topic');
+if (urlTopicName) {
+	json_fname = urlTopicName + ".json";
+	$( '#timelineHeading' ).text("Article timeline for topic: " + urlTopicName);
+}
+
 function deconstructTranslate(translateString) {
 	// takes a string like "translate(100,200)" and returns the numbers [100, 200]
 	translateString = translateString.replace("(", "").replace(")", "");
@@ -873,6 +879,7 @@ d3.json(json_fname, function(error, data_total) {
 			// Hide main items if the brush is empty
 			if (brush.empty()) {
 				yearItems.style("display", "none");
+				// changeExtent(timeBegin, timeEnd);
 			}
 			// console.log($('.mainClipPath')[0].getBoundingClientRect());
 			// console.log($('.chart')[0].getBoundingClientRect());

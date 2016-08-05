@@ -300,7 +300,8 @@ d3.json(json_fname, function(error, data_total) {
 					.on("mouseover", function(d) {
 							// var t = d3.select(this).select('.paperLabel');
 							// console.log(this.getBoundingClientRect());
-							console.log(d.pubdate);
+							console.log($( this ).position());
+							console.log($( '.main' ).position().top + mainHeight);
 						})
 					.on("click", function(d) {
 						var url = "http://labs.jstor.org" + d.stable_url;
@@ -1202,6 +1203,11 @@ d3.json(json_fname, function(error, data_total) {
 						.html("testButton")
 						.on("click", function() {
 							// changeExtent(Math.round(minExtent+1), Math.round(maxExtent+1), 250, "linear");
-							demoInit();
+							var chartHeight = +chart.attr("height");
+							var currMainHeight = +main.attr("height");
+							chart.transition().duration(1000).attr("height", chartHeight+100);
+							main.transition().duration(1000).attr("height", currMainHeight+100);
+							mini.transition().duration(1000)
+								.attr("transform", "translate(" + m[3] + "," + (currMainHeight+100 + m[0]) + ")")
 						});
 });

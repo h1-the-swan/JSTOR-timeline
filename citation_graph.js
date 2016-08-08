@@ -11,6 +11,9 @@ d3.json(json_fname, function(error, data) {
 				.charge(-60)
 				.linkDistance(30)
 				.size([w,h]);
+	// http://stackoverflow.com/questions/17953106/why-does-d3-js-v3-break-my-force-graph-when-implementing-zooming-when-v2-doesnt/17976205#17976205
+	var drag = force.drag()
+		.on("dragstart", function() { d3.event.sourceEvent.stopPropagation(); });
 
 	console.log(data);
 	force.nodes(data.nodes)
@@ -37,7 +40,8 @@ d3.json(json_fname, function(error, data) {
 			return 4 + efScale(d.eigenfactor_score);
 			})
 		.style("fill", "darksalmon")
-		.call(force.drag);
+		// .call(force.drag);
+		.call(drag);
 
 	force.on("tick", function() {
 		link.attr("x1", function(d) { return d.source.x; })
@@ -52,16 +56,31 @@ d3.json(json_fname, function(error, data) {
 		});
 	});
 
-	node.on("mouseover", function(d) {
-			d3.selectAll(".nodeLabel").remove();
-			d3.select(this).append("text")
-				.text(d.title + ", " + d.year)
-				.attr("class", "nodeLabel")
-				.on("click", function(dd) {
-					var url = "http://labs.jstor.org" + d.stable_url;
-					window.open(url,'_blank');
-				});
+	node.append("text")
+		.attr("class", "nodeLabel")
+		.text(function(d) {
+			var AuthorName = d.authors[0].split(" ").slice(-1);
+			return AuthorName + "," + d.year;
 		});
+	chart.call(d3.behavior.zoom()
+		.on('zoom', function() {
+			chart.attr(
+				'transform',
+				'translate(' + d3.event.translate + ')' +
+					'scale(' + d3.event.scale + ')'
+			);
+		})
+	);
+	// node.on("mouseover", function(d) {
+	// 		d3.selectAll(".nodeLabel").remove();
+	// 		d3.select(this).append("text")
+	// 			.text(d.title + ", " + d.year)
+	// 			.attr("class", "nodeLabel")
+	// 			.on("click", function(dd) {
+	// 				var url = "http://labs.jstor.org" + d.stable_url;
+	// 				window.open(url,'_blank');
+	// 			});
+	// 	});
 
 		
 });

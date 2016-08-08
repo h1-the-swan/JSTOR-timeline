@@ -1208,6 +1208,9 @@ d3.json(json_fname, function(error, data_total) {
 							chart.transition().duration(1000).attr("height", chartHeight+100);
 							main.transition().duration(1000).attr("height", currMainHeight+100);
 							mini.transition().duration(1000)
-								.attr("transform", "translate(" + m[3] + "," + (currMainHeight+100 + m[0]) + ")")
+								.attr("transform", "translate(" + m[3] + "," + (currMainHeight+100 + m[0]) + ")");
+							d3.select("#clip rect").attr("height", currMainHeight+100);
+							display();
+							console.log(d3.select("#clip").attr("height"));
 						});
 });

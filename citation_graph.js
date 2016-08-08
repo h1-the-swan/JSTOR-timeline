@@ -25,23 +25,37 @@ d3.json(json_fname, function(error, data) {
 				.attr("width", w)
 				.attr("height", h)
 				.attr("class", "chart");
+	var group = chart.append("g");
 
-	var link = chart.selectAll(".link")
+	var link = group.selectAll(".link")
 		.data(data.links)
 		.enter().append("line")
 		.attr("class", "link");
 
-	var node = chart.selectAll(".nodeG")
+	var node = group.selectAll(".nodeG")
 		.data(data.nodes)
 		.enter().append("g");
 	node.append("circle")
 		.attr("class", "node")
 		.attr("r", function(d) {
-			return 4 + efScale(d.eigenfactor_score);
+			d.radius = 4 + efScale(d.eigenfactor_score);
+			return d.radius;
 			})
 		.style("fill", "darksalmon")
 		// .call(force.drag);
 		.call(drag);
+
+	node.attr("title", function(d) {
+			// for tooltip
+			var text = d.title
+						+ ", "
+						+ d.authors.join(", ")
+						+ ", "
+						+ d.journal
+						+ ", "
+						+ d.year;
+			return text;
+		});
 
 	force.on("tick", function() {
 		link.attr("x1", function(d) { return d.source.x; })
@@ -56,19 +70,26 @@ d3.json(json_fname, function(error, data) {
 		});
 	});
 
-	node.append("text")
+	var label = node.append("text")
 		.attr("class", "nodeLabel")
 		.text(function(d) {
 			var AuthorName = d.authors[0].split(" ").slice(-1);
 			return AuthorName + "," + d.year;
 		});
-	chart.call(d3.behavior.zoom()
+	group.call(d3.behavior.zoom()
 		.on('zoom', function() {
-			chart.attr(
+			group.attr(
 				'transform',
 				'translate(' + d3.event.translate + ')' +
 					'scale(' + d3.event.scale + ')'
 			);
+			d3.selectAll(".node")
+				.attr("r", function(d) {return d.radius/d3.event.scale;})
+				.style("stroke-width", 1/d3.event.scale);
+			d3.selectAll(".link")
+				.style("stroke-width", 1/d3.event.scale);
+			d3.selectAll(".nodeLabel")
+				.style("font-size", function(d) {return (.6/(Math.sqrt(d3.event.scale))) + "em";});
 		})
 	);
 	// node.on("mouseover", function(d) {

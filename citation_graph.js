@@ -76,7 +76,8 @@ d3.json(json_fname, function(error, data) {
 			var AuthorName = d.authors[0].split(" ").slice(-1);
 			return AuthorName + "," + d.year;
 		});
-	group.call(d3.behavior.zoom()
+	chart.call(d3.behavior.zoom()
+		.scaleExtent([.85,10])
 		.on('zoom', function() {
 			group.attr(
 				'transform',

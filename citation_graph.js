@@ -25,12 +25,30 @@ d3.json(json_fname, function(error, data) {
 				.attr("width", w)
 				.attr("height", h)
 				.attr("class", "chart");
+	// http://bl.ocks.org/tomgp/d59de83f771ca2b6f1d4
+	chart.append("defs").append("marker")
+		.attr({
+			"id": "arrow",
+			"viewBox": "0 -5 10 10",
+			"refX": 15,
+			"refY": 0,
+			"markerWidth": 6,
+			"markerHeight": 6,
+			"orient": "auto"
+		})
+		.append("path")
+			// .attr("d", "M0,-5L10,0L0,5 L10,0 L0, -5")
+			.attr("d", "M0,-5L10,0L0,5")
+			.attr("class", "arrowHead");
+
 	var group = chart.append("g");
 
 	var link = group.selectAll(".link")
 		.data(data.links)
 		.enter().append("line")
-		.attr("class", "link");
+		.attr("class", "link")
+		// draw arrowhead (see defs above)
+		.style("marker-end", "url(#arrow)");
 
 	var node = group.selectAll(".nodeG")
 		.data(data.nodes)
@@ -78,21 +96,38 @@ d3.json(json_fname, function(error, data) {
 		});
 	chart.call(d3.behavior.zoom()
 		.scaleExtent([.85,10])
-		.on('zoom', function() {
-			group.attr(
-				'transform',
-				'translate(' + d3.event.translate + ')' +
-					'scale(' + d3.event.scale + ')'
-			);
-			d3.selectAll(".node")
-				.attr("r", function(d) {return d.radius/d3.event.scale;})
-				.style("stroke-width", 1/d3.event.scale);
-			d3.selectAll(".link")
-				.style("stroke-width", 1/d3.event.scale);
-			d3.selectAll(".nodeLabel")
-				.style("font-size", function(d) {console.log((.4/(Math.sqrt(d3.event.scale))) + "em"); return (.6/(Math.sqrt(d3.event.scale))) + "em";});
-		})
+		.on('zoom', zoomed)
 	);
+	function zoomed() {
+		console.log(d3.event);
+		group.attr(
+			'transform',
+			'translate(' + d3.event.translate + ')' +
+				'scale(' + d3.event.scale + ')'
+		);
+		d3.selectAll(".node")
+			.attr("r", function(d) {return d.radius/d3.event.scale;})
+			.style("stroke-width", 1/d3.event.scale);
+		d3.selectAll(".link")
+			.style("stroke-width", 1/d3.event.scale);
+		d3.selectAll(".nodeLabel")
+			.style("font-size", function(d) {console.log((.4/(Math.sqrt(d3.event.scale))) + "em"); return (.6/(Math.sqrt(d3.event.scale))) + "em";});
+	}
+	function zoom2(x, y) {
+		console.log(d3.event);
+		group.attr(
+			'transform',
+			'translate(485,307)' +
+				'scale(1.5)'
+		);
+		d3.selectAll(".node")
+			.attr("r", function(d) {return d.radius/d3.event.scale;})
+			.style("stroke-width", 1/d3.event.scale);
+		d3.selectAll(".link")
+			.style("stroke-width", 1/d3.event.scale);
+		d3.selectAll(".nodeLabel")
+			.style("font-size", function(d) {console.log((.4/(Math.sqrt(d3.event.scale))) + "em"); return (.6/(Math.sqrt(d3.event.scale))) + "em";});
+	}
 	// node.on("mouseover", function(d) {
 	// 		d3.selectAll(".nodeLabel").remove();
 	// 		d3.select(this).append("text")
@@ -129,5 +164,18 @@ d3.json(json_fname, function(error, data) {
 				}
 			});
 
-		
+	d3.select("#testButton").on("click", function() {
+		var zoom = d3.behavior.zoom().on("zoom", zoomed);
+		// chart.call(d3.behavior.zoom().translate([5,5], 1.5).scale(1.5).event);
+		//
+		// manual zoom
+		// http://bl.ocks.org/mbostock/9656675
+		chart.transition().duration(750)
+			.call(zoom.translate([5,5], 1.5).scale(1.5).event);
+	});	
+	chart.on("click", function() {
+		console.log(d3.event);
+	});
+
+
 });

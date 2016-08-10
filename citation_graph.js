@@ -5,7 +5,7 @@ d3.json(json_fname, function(error, data) {
 		h = 400;
 	var efScale = d3.scale.linear()
 			.domain(d3.extent(data.nodes, function(d) { return d.eigenfactor_score; }))
-			.range([0, 5]);
+			.range([0, 10]);
 
 	var force = d3.layout.force()
 				.charge(-60)
@@ -38,7 +38,7 @@ d3.json(json_fname, function(error, data) {
 	node.append("circle")
 		.attr("class", "node")
 		.attr("r", function(d) {
-			d.radius = 4 + efScale(d.eigenfactor_score);
+			d.radius = 2 + efScale(d.eigenfactor_score);
 			return d.radius;
 			})
 		.style("fill", "darksalmon")
@@ -103,6 +103,31 @@ d3.json(json_fname, function(error, data) {
 	// 				window.open(url,'_blank');
 	// 			});
 	// 	});
+	
+	// Add a checkbox to remove links:
+	d3.select("#linksCheckBox").on("change", linksCheckBoxChange);
+		// $( '.link' ).addClass( 'hidden' );
+		// $('line').addClass('dd');
+
+	function linksCheckBoxChange() {
+		// note: modifying SVG classes only works in jQuery 3+
+		// TODO: updating jQuery broke jQuery UI. need to try updating jQuery UI
+		$( '.link' ).toggleClass( 'hidden' );
+	}
+
+	// Only show links to/from selected node on mouseover
+	node.on("mouseover", function(d) {
+			$( '.link' ).addClass( 'hidden' );
+			link.filter(function(dd) { return dd.source===d || dd.target===d; })
+				.each(function(dd) { $( this ).removeClass( 'hidden' ); });
+		})
+		.on("mouseout", function(d) {
+				if ($( '#linksCheckBox' ).is( ':checked' )) {
+					$( '.link' ).removeClass( 'hidden' );
+				} else {
+					$( '.link' ).addClass('hidden');
+				}
+			});
 
 		
 });

@@ -4,9 +4,11 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width">
 		<title>JSTOR Topic Citation Graph</title>
-		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+		<!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 		<script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-		<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+		<!-- <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery&#45;ui.min.js"></script> -->
+		<script   src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"   integrity="sha256-eGE6blurk5sHj+rmkfsGYeKyZx3M4bG+ZlFyA7Kns7E="   crossorigin="anonymous"></script>
 		<script type="text/javascript" charset="utf-8">
 			$( function() {
 				$( document ).tooltip({
@@ -90,6 +92,10 @@
 			opacity: .6;
 		}
 
+		.link.hidden {
+			visibility: hidden;
+		}
+
 		.node {
 			stroke: black;
 			stroke-width: 1;
@@ -109,6 +115,7 @@
 	<body>
 		<h1>Topic: Climate Change</h1>
 		<div id="graph"></div>
+		<label><input id="linksCheckBox" type="checkbox" checked> Show links</label>
 		<script src="citation_graph.js" charset="utf-8"></script>
 	</body>
 </html>

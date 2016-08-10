@@ -90,7 +90,7 @@ d3.json(json_fname, function(error, data) {
 			d3.selectAll(".link")
 				.style("stroke-width", 1/d3.event.scale);
 			d3.selectAll(".nodeLabel")
-				.style("font-size", function(d) {return (.6/(Math.sqrt(d3.event.scale))) + "em";});
+				.style("font-size", function(d) {console.log((.4/(Math.sqrt(d3.event.scale))) + "em"); return (.6/(Math.sqrt(d3.event.scale))) + "em";});
 		})
 	);
 	// node.on("mouseover", function(d) {

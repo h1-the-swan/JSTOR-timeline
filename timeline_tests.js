@@ -686,208 +686,222 @@ d3.json(json_fname, function(error, data_total) {
 			}
 
 
-			switch (markType) {
-				case 'circle':
-					var visItems = yearItems.filter(function(d) {return d.year < maxExtent && d.year > minExtent;})
-					var notVisItems = yearItems.filter(function(d) {return d.year>= maxExtent || d.year <= minExtent;});
-					visItems.style("display", "");
-					notVisItems.style("display", "none");
-					// console.log(brush.extent());
-
-					// mini.select(".brush")
-					// 	.call(brush.extent([minExtent, maxExtent]));
-					// console.log(maxExtent-minExtent);
-					updateExtentLines(minExtentScreen, maxExtentScreen);
-
-					x1.domain([minExtent, maxExtent]);
-
-					// update styles of mini items that are visible in the main display.
-					// reset all to normal, then style just the visible ones
-					miniItems.style(stylesBase);
-					miniItems.filter(function(d) {
-						var match = false;
-						visItems.forEach(function(dd) {
-							if (d.id==dd.firstTitle) {
-								match = true;
-							}
-						});
-						return match;
-						}).style(stylesVisible);
-
-					//update main item marks
-					visItems.attr("transform", function(d) {
-						d.x = x1(d.year);
-						d.y = y1(d.lane) + mainMinRad;
-						return "translate(" + d.x + "," + d.y + ")";
-					});
-
-					yearMarks.attr("r", function(d) {return d.radius;});
-
-					break;
-
-				case 'icon':
-					var visItems = yearItems.filter(function(d) {return d.year < maxExtent && d.year > minExtent;})
-					var notVisItems = yearItems.filter(function(d) {return d.year>= maxExtent || d.year <= minExtent;});
-					visItems.style("display", "");
-					notVisItems.style("display", "none");
-					// console.log(brush.extent());
-
-					// mini.select(".brush")
-					// 	.call(brush.extent([minExtent, maxExtent]));
-					// console.log(maxExtent-minExtent);
-					updateExtentLines(minExtentScreen, maxExtentScreen);
-
-					x1.domain([minExtent, maxExtent]);
-
-					// update styles of mini items that are visible in the main display.
-					// reset all to normal, then style just the visible ones
-					miniItems.style(stylesBase);
-					miniItems.filter(function(d) {
-						var match = false;
-						visItems.forEach(function(dd) {
-							if (d.id==dd.firstTitle) {
-								match = true;
-							}
-						});
-						return match;
-						}).style(stylesVisible);
-
-					//update main item marks
-					visItems.attr("transform", function(d) {
-						// d.x = x1(d.year) - 10;
-						d.x = x1(d.year);
-						d.y = y1(d.lane) + 20;
-						return "translate(" + d.x + "," + d.y + ")";
-					});
-
-					paperMarks.attr("transform", function(d) {
-								return "translate(" + d.idx/2 + "," + d.idx*3 + ")";
-								// return "translate(" + "0" + "," + d.idx*3 + ")";
-							})
-						.style("fill", "black")
-						.style("opacity", 1)
-						.style("font-size", "1.5em");
-						// .style("font-size", function(d) {return (d.radius/10) + "em";});
-
-					paperItems.each(function(d) {
-						var item = d3.select(this);
-						var m = item.select(".paperMark");
-						var bbox = m.node().getBBox();
-						item.select("rect")
-							.attr("x", bbox.x)
-							.attr("y", bbox.y)
-							.attr("width", bbox.width)
-							.attr("height", bbox.height)
-							.attr("transform", m.attr("transform"))
-							.style("fill", "white");
-						console.log(m.attr("transform"));
-					});
-
-					break;
-				
-			}
-
-
-			//update the item labels
-			// var rotate = -20;
-			function _rotate(rotation) {
-				labels.attr("transform", function(d) { 
-					return "rotate(" + rotation + "," + d.x + "," + d.y + ")"; 
-				});
-			}
-			// constraint relaxation
-			// http://bl.ocks.org/syntagmatic/4053096
-			var alpha = 1;
-			var spacing = 15;
-			function relax(labels) {
-				// Move text if overlapping (recursively)
-				var again = false;
-				labels.each(function(d) {
-					// console.log(d3.select(this).attr("x"));
-					var a = this;
-					var da = d3.select(a);
-					var ax = da.attr("x");
-					// console.log(ax);
-					labels.each(function(dd) {
-						var b = this;
-						// if (a == b) {
-						// 	return;
-						// }
-						var db = d3.select(b);
-						var bx = db.attr("x");
-						var deltaX = ax - bx;
-						// console.log(deltaX);
-						// if (Math.abs(deltaX) > spacing) {
-						// 	return;
-						// }
-						if ( (a != b) && Math.abs(deltaX) < spacing) {
-							// console.log(deltaX);
-							// collision detected
-							again = true;
-							var sign = deltaX > 0 ? 1 : -1;
-							// console.log(a);
-							// console.log(db.attr("x"));
-							d.x = +ax + (sign*alpha);
-							dd.x = +bx - (sign*alpha);
-							da.attr("x", d.x);
-							db.attr("x", dd.x);
-							// d3.select(this).attr("transform", "translate(500, 0)");
-							// console.log(db.attr("x"));
-							// d.x += sign*alpha;
-							// a.x += 1;
-						}
-					});
-				});
-				if (again) {
-					// setTimeout(function() {
-					// 	relax(labels);
-					// }, 2);
-					relax(labels);
-				} else {
-					_rotate(-20);
-					//
-				}
-
-			}
-			// labels = itemRects.selectAll(".yearItemLabel")
-			// 	.attr("x", function(d) {d.x = x1(Math.max(d.key, minExtent)); return d.x;})
-			// 	.attr("y", function(d) {d.y = d.cy; return d.y;})
-			// 	.data(visItems);
-			// 	// .attr("x", function(d) {return x1(Math.max(d.start, minExtent) + 2);});
-			// 	// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; });
-            //
-			// labels.enter().append("text")
-			// 	.text(function(d) {return d.year + ": " + d.values.length + " papers";})
-			// 	.attr("x", function(d) {d.x = x1(Math.max(d.key, minExtent)); return d.x;})
-			// 	// .attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
-			// 	// .attr("y", function(d) {d.y = y1(d.lane)+rad; return d.y;})
-			// 	.attr("y", function(d) {d.y = d.cy; return d.y;})
-			// 	.attr("class", "yearItemLabel")
-			// 	.attr("text-anchor", "end")
-			// 	// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })
-			// 	.on('mouseover', function(d) {
-			// 			console.log(d.x);
-			// 		});
-            //
-            //
-			// labels.exit().remove();
-
-			//update axis
-			xAxisMainObj.call(xAxisMain);
-
-			// // only use one of the following (or none)
-			// _rotate(-20);
-			// relax(labels);
 
 			// Hide main items if the brush is empty
 			if (brush.empty()) {
-				yearItems.style("display", "none");
-				// changeExtent(timeBegin, timeEnd);
+				// yearItems.style("display", "none");
+				// changeExtent(timeBegin, timeEnd, 0);
+				//
+				// show all main items, but keep the brush hidden
+				updateMain(timeBegin,timeEnd);
+				// this will remove the extent lines:
+				updateExtentLines();
+			} else {
+				// d3.select(".brush").attr("display", "");
+				updateMain(minExtent, maxExtent);
+				updateExtentLines(minExtentScreen, maxExtentScreen);
 			}
-			// console.log($('.mainClipPath')[0].getBoundingClientRect());
-			// console.log($('.chart')[0].getBoundingClientRect());
-			labelsCollisionDetect();
 		}
+
+	function updateMain(minExtent, maxExtent) {
+		
+		switch (markType) {
+			case 'circle':
+				var visItems = yearItems.filter(function(d) {return d.year < maxExtent && d.year > minExtent;})
+				var notVisItems = yearItems.filter(function(d) {return d.year>= maxExtent || d.year <= minExtent;});
+				visItems.style("display", "");
+				notVisItems.style("display", "none");
+				// console.log(brush.extent());
+
+				// mini.select(".brush")
+				// 	.call(brush.extent([minExtent, maxExtent]));
+				// console.log(maxExtent-minExtent);
+
+				x1.domain([minExtent, maxExtent]);
+
+				// update styles of mini items that are visible in the main display.
+				// reset all to normal, then style just the visible ones
+				miniItems.style(stylesBase);
+				miniItems.filter(function(d) {
+					var match = false;
+					visItems.forEach(function(dd) {
+						if (d.id==dd.firstTitle) {
+							match = true;
+						}
+					});
+					return match;
+					}).style(stylesVisible);
+
+				//update main item marks
+				visItems.attr("transform", function(d) {
+					d.x = x1(d.year);
+					d.y = y1(d.lane) + mainMinRad;
+					return "translate(" + d.x + "," + d.y + ")";
+				});
+
+				yearMarks.attr("r", function(d) {return d.radius;});
+
+				break;
+
+			case 'icon':
+				var visItems = yearItems.filter(function(d) {return d.year < maxExtent && d.year > minExtent;})
+				var notVisItems = yearItems.filter(function(d) {return d.year>= maxExtent || d.year <= minExtent;});
+				visItems.style("display", "");
+				notVisItems.style("display", "none");
+				// console.log(brush.extent());
+
+				// mini.select(".brush")
+				// 	.call(brush.extent([minExtent, maxExtent]));
+				// console.log(maxExtent-minExtent);
+				// updateExtentLines(minExtentScreen, maxExtentScreen);
+
+				x1.domain([minExtent, maxExtent]);
+
+				// update styles of mini items that are visible in the main display.
+				// reset all to normal, then style just the visible ones
+				miniItems.style(stylesBase);
+				miniItems.filter(function(d) {
+					var match = false;
+					visItems.forEach(function(dd) {
+						if (d.id==dd.firstTitle) {
+							match = true;
+						}
+					});
+					return match;
+					}).style(stylesVisible);
+
+				//update main item marks
+				visItems.attr("transform", function(d) {
+					// d.x = x1(d.year) - 10;
+					d.x = x1(d.year);
+					d.y = y1(d.lane) + 20;
+					return "translate(" + d.x + "," + d.y + ")";
+				});
+
+				paperMarks.attr("transform", function(d) {
+							return "translate(" + d.idx/2 + "," + d.idx*3 + ")";
+							// return "translate(" + "0" + "," + d.idx*3 + ")";
+						})
+					.style("fill", "black")
+					.style("opacity", 1)
+					.style("font-size", "1.5em");
+					// .style("font-size", function(d) {return (d.radius/10) + "em";});
+
+				paperItems.each(function(d) {
+					var item = d3.select(this);
+					var m = item.select(".paperMark");
+					var bbox = m.node().getBBox();
+					item.select("rect")
+						.attr("x", bbox.x)
+						.attr("y", bbox.y)
+						.attr("width", bbox.width)
+						.attr("height", bbox.height)
+						.attr("transform", m.attr("transform"))
+						.style("fill", "white");
+					console.log(m.attr("transform"));
+				});
+
+				break;
+			
+		}
+
+
+		//update the item labels
+		// var rotate = -20;
+		function _rotate(rotation) {
+			labels.attr("transform", function(d) { 
+				return "rotate(" + rotation + "," + d.x + "," + d.y + ")"; 
+			});
+		}
+		// constraint relaxation
+		// http://bl.ocks.org/syntagmatic/4053096
+		var alpha = 1;
+		var spacing = 15;
+		function relax(labels) {
+			// Move text if overlapping (recursively)
+			var again = false;
+			labels.each(function(d) {
+				// console.log(d3.select(this).attr("x"));
+				var a = this;
+				var da = d3.select(a);
+				var ax = da.attr("x");
+				// console.log(ax);
+				labels.each(function(dd) {
+					var b = this;
+					// if (a == b) {
+					// 	return;
+					// }
+					var db = d3.select(b);
+					var bx = db.attr("x");
+					var deltaX = ax - bx;
+					// console.log(deltaX);
+					// if (Math.abs(deltaX) > spacing) {
+					// 	return;
+					// }
+					if ( (a != b) && Math.abs(deltaX) < spacing) {
+						// console.log(deltaX);
+						// collision detected
+						again = true;
+						var sign = deltaX > 0 ? 1 : -1;
+						// console.log(a);
+						// console.log(db.attr("x"));
+						d.x = +ax + (sign*alpha);
+						dd.x = +bx - (sign*alpha);
+						da.attr("x", d.x);
+						db.attr("x", dd.x);
+						// d3.select(this).attr("transform", "translate(500, 0)");
+						// console.log(db.attr("x"));
+						// d.x += sign*alpha;
+						// a.x += 1;
+					}
+				});
+			});
+			if (again) {
+				// setTimeout(function() {
+				// 	relax(labels);
+				// }, 2);
+				relax(labels);
+			} else {
+				_rotate(-20);
+				//
+			}
+
+		}
+		// labels = itemRects.selectAll(".yearItemLabel")
+		// 	.attr("x", function(d) {d.x = x1(Math.max(d.key, minExtent)); return d.x;})
+		// 	.attr("y", function(d) {d.y = d.cy; return d.y;})
+		// 	.data(visItems);
+		// 	// .attr("x", function(d) {return x1(Math.max(d.start, minExtent) + 2);});
+		// 	// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; });
+		//
+		// labels.enter().append("text")
+		// 	.text(function(d) {return d.year + ": " + d.values.length + " papers";})
+		// 	.attr("x", function(d) {d.x = x1(Math.max(d.key, minExtent)); return d.x;})
+		// 	// .attr("y", function(d) {d.y = y1(d.lane + .5); return d.y;})
+		// 	// .attr("y", function(d) {d.y = y1(d.lane)+rad; return d.y;})
+		// 	.attr("y", function(d) {d.y = d.cy; return d.y;})
+		// 	.attr("class", "yearItemLabel")
+		// 	.attr("text-anchor", "end")
+		// 	// .attr("transform", function(d) { return "rotate(" + rotate + "," + d.x + "," + d.y + ")"; })
+		// 	.on('mouseover', function(d) {
+		// 			console.log(d.x);
+		// 		});
+		//
+		//
+		// labels.exit().remove();
+
+		//update axis
+		xAxisMainObj.call(xAxisMain);
+
+		// // only use one of the following (or none)
+		// _rotate(-20);
+		// relax(labels);
+		//
+		// console.log($('.mainClipPath')[0].getBoundingClientRect());
+		// console.log($('.chart')[0].getBoundingClientRect());
+		labelsCollisionDetect();
+
+	}
 	
 	var afterTransitionX = function(d, i) {
 		// return x1(+d.year) + ((i*i)*3);

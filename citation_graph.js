@@ -227,9 +227,9 @@ d3.json(json_fname, function(error, data) {
 		var nudge = 50;
 		node.each(function(dd) {
 			if (neighboring(dd, d)) {
-				dd.x = d.x - nudge;
-			} else if (neighboring(d, dd)) {
 				dd.x = d.x + nudge;
+			} else if (neighboring(d, dd)) {
+				dd.x = d.x - nudge;
 			}
 			// force.tick();
 			// return "translate(" + dd.x + "," + dd.y + ")";

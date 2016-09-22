@@ -3,6 +3,12 @@ var json_fname = 'Climate_change_network.json'
 d3.json(json_fname, function(error, data) {
 	var w = 960,
 		h = 400;
+	var opacityVals = {
+			'nodeNormal': 1,
+			'nodeFaded': .1,
+			'linkNormal': .6,
+			'linkFaded': .05
+		}
 	var efScale = d3.scale.linear()
 			.domain(d3.extent(data.nodes, function(d) { return d.eigenfactor_score; }))
 			.range([0, 10]);
@@ -32,8 +38,8 @@ d3.json(json_fname, function(error, data) {
 			"viewBox": "0 -5 10 10",
 			"refX": 15,
 			"refY": 0,
-			"markerWidth": 6,
-			"markerHeight": 6,
+			"markerWidth": 8,
+			"markerHeight": 8,
 			"orient": "auto"
 		})
 		.append("path")
@@ -48,7 +54,8 @@ d3.json(json_fname, function(error, data) {
 		.enter().append("line")
 		.attr("class", "link")
 		// draw arrowhead (see defs above)
-		.style("marker-end", "url(#arrow)");
+		.style("marker-end", "url(#arrow)")
+		.style("opacity", opacityVals.linkNormal);
 
 	var node = group.selectAll(".nodeG")
 		.data(data.nodes)
@@ -75,18 +82,40 @@ d3.json(json_fname, function(error, data) {
 			return text;
 		});
 
+	// force.on("tick", function() {
+	// 	link.attr("x1", function(d) { return d.source.x; })
+	// 		.attr("y1", function(d) { return d.source.y; })
+	// 		.attr("x2", function(d) { return d.target.x; })
+	// 		.attr("y2", function(d) { return d.target.y; });
+	// 	
+	// 	// node.attr("cx", function(d) { return d.x; })
+	// 	// 	.attr("cy", function(d) { return d.y; });
+	// 	node.attr("transform", function(d) {
+	// 		return "translate(" + d.x + "," + d.y + ")";
+	// 	});
+	// });
+	// force.on("tick", tick);
 	force.on("tick", function() {
-		link.attr("x1", function(d) { return d.source.x; })
+		tick();
+	});
+
+	function tick(dur) {
+		if (typeof dur === 'undefined') {
+			dur = 0;
+		}
+		link.transition().duration(dur)
+			.attr("x1", function(d) { return d.source.x; })
 			.attr("y1", function(d) { return d.source.y; })
 			.attr("x2", function(d) { return d.target.x; })
 			.attr("y2", function(d) { return d.target.y; });
 		
 		// node.attr("cx", function(d) { return d.x; })
 		// 	.attr("cy", function(d) { return d.y; });
-		node.attr("transform", function(d) {
-			return "translate(" + d.x + "," + d.y + ")";
-		});
-	});
+		node.transition().duration(dur)
+			.attr("transform", function(d) {
+				return "translate(" + d.x + "," + d.y + ")";
+			});
+	}
 
 	var label = node.append("text")
 		.attr("class", "nodeLabel")
@@ -94,12 +123,26 @@ d3.json(json_fname, function(error, data) {
 			var AuthorName = d.authors[0].split(" ").slice(-1);
 			return AuthorName + "," + d.year;
 		});
-	chart.call(d3.behavior.zoom()
-		.scaleExtent([.85,10])
-		.on('zoom', zoomed)
-	);
+
+	// http://stackoverflow.com/questions/8739072/highlight-selected-node-its-links-and-its-children-in-a-d3-force-directed-grap
+	var linkedByIndex = {};
+	link.each(function(d) {
+		linkedByIndex[d.source.index + "," + d.target.index] = 1;
+	});
+	function neighboring(a, b) {
+		return linkedByIndex[a.index + "," + b.index];
+	}
+
+	var zoom = d3.behavior.zoom().scaleExtent([.85,10]).on("zoom", zoomed);
+	chart.call(zoom)
+		.call(zoom.event)
+		.on("dblclick.zoom", null);
+	// chart.call(d3.behavior.zoom()
+	// 	.scaleExtent([.85,10])
+	// 	.on('zoom', zoomed)
+	// );
 	function zoomed() {
-		console.log(d3.event);
+		// console.log(d3.event);
 		group.attr(
 			'transform',
 			'translate(' + d3.event.translate + ')' +
@@ -114,7 +157,7 @@ d3.json(json_fname, function(error, data) {
 			.style("font-size", function(d) {console.log((.4/(Math.sqrt(d3.event.scale))) + "em"); return (.6/(Math.sqrt(d3.event.scale))) + "em";});
 	}
 	function zoom2(x, y) {
-		console.log(d3.event);
+		// console.log(d3.event);
 		group.attr(
 			'transform',
 			'translate(485,307)' +
@@ -162,20 +205,67 @@ d3.json(json_fname, function(error, data) {
 				} else {
 					$( '.link' ).addClass('hidden');
 				}
-			});
+			})
+		// .on("click", clicked);
+		.on("dblclick", clicked);
+
+	function clicked(d) {
+		var x = d.x,
+			y = d.y,
+			scale = 3,
+			translate = [w / 2 - scale * x, h / 2 - scale * y];
+		chart.transition().duration(750)
+			.call(zoom.translate(translate).scale(scale).event);
+		link.style("opacity", opacityVals.linkFaded)
+			.filter(function(dd) { return dd.source===d || dd.target===d; })
+			.style("opacity", opacityVals.linkNormal);
+		node.style("opacity", function(dd) {
+			return neighboring(d, dd) || neighboring(dd, d) ? opacityVals.nodeNormal : opacityVals.nodeFaded;
+		});
+		// also highlight clicked node:
+		d3.select(this).style("opacity", opacityVals.nodeNormal);
+		var nudge = 50;
+		node.each(function(dd) {
+			if (neighboring(dd, d)) {
+				dd.x = d.x - nudge;
+			} else if (neighboring(d, dd)) {
+				dd.x = d.x + nudge;
+			}
+			// force.tick();
+			// return "translate(" + dd.x + "," + dd.y + ")";
+		});
+		tick(1000);
+		force.stop();
+		d3.event.stopPropagation();
+	}
 
 	d3.select("#testButton").on("click", function() {
-		var zoom = d3.behavior.zoom().on("zoom", zoomed);
 		// chart.call(d3.behavior.zoom().translate([5,5], 1.5).scale(1.5).event);
 		//
 		// manual zoom
 		// http://bl.ocks.org/mbostock/9656675
 		chart.transition().duration(750)
-			.call(zoom.translate([5,5], 1.5).scale(1.5).event);
+			// .call(zoom.translate([5,5], 1.5).scale(1.5).event);
+			.call(zoom.translate([5,5]).scale(1.5).event);
 	});	
 	chart.on("click", function() {
-		console.log(d3.event);
+		// console.log(d3.event);
 	});
+	
+	var resetButton = d3.select("body").append("button")
+		.text("resetButton")
+		.on("click", resetChart);
+
+	chart.on("dblclick", resetChart);
+
+	function resetChart() {
+		chart.transition().duration(750)
+			.call(zoom.translate([0,0]).scale(1).event);
+		node.style("opacity", opacityVals.nodeNormal);
+		link.style("opacity", opacityVals.linkNormal);
+		force.start();
+	}
+
 
 
 });

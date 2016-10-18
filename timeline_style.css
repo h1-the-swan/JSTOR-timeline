@@ -1,0 +1,97 @@
+body {
+	font-family: "Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;
+}
+
+.chart {
+	shape-rendering: crispEdges;
+}
+
+g {
+	overflow: visible;
+}
+
+.tick text {
+	color: #333333
+}
+
+.main .tick text {
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.mini .tick text {
+	font-size: 13px;
+}
+
+.yearItem circle {
+	fill: #9F1D21;
+	fill-opacity: .8;
+	stroke-width: 6;	
+}
+
+.yearItemLabel {
+	pointer-events: none;
+}
+
+.paperItem circle {
+	fill: #9F1D21;
+	fill-opacity: .5;
+	stroke-width: 6;	
+}
+
+.paperItem:hover {
+	/* color: blue; */
+	/* fill: blue; */
+}
+
+.paperLabel {
+	fill: #546D89;
+	color: #546D89;
+	font-size: 13px;
+	text-decoration: underline;
+}
+
+.brush {
+	pointer-events: none;
+}
+
+circle {
+	pointer-events: inherit;
+}
+
+.brush .extent {
+	stroke: gray;
+	fill: dodgerblue;
+	fill-opacity: .365;
+}
+
+text.numIndicator {
+	fill: black;
+	color: black;
+	font-weight: bold;
+	pointer-events: none;
+}
+
+.extentLine {
+	stroke: gray;
+	stroke-dasharray: 5,5;
+}
+
+.scrollItems {
+	cursor: pointer;
+	font-size: 1.5em;
+}
+
+.scrollItems text {
+	font-size: 1em;
+}
+
+.clearBrushIcon {
+	cursor: default;
+}
+
+.ui-tooltip {
+	font: 12px sans-serif;	
+}
+
+

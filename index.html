@@ -11,6 +11,9 @@
 				$( document ).tooltip({
 					track: true,
 					// position: { my: "left+10 bottom" }
+					content: function() {
+						return $( this ).attr( 'title' );
+					}
 				});
 			} );
 		</script>

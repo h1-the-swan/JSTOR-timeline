@@ -288,14 +288,21 @@ d3.json(json_fname, function(error, data_total) {
 					})
 					.attr("title", function(d) {
 							// for tooltip
-							var text = d.title
-										+ ", "
-										+ d.authors.join(", ")
-										+ ", "
-										+ d.journal
-										+ ", "
-										+ d.year;
-							return text;
+							// var text = d.title
+							// 			+ ", "
+							// 			+ d.authors.join(", ")
+							// 			+ ", "
+							// 			+ d.journal
+							// 			+ ", "
+							// 			+ d.year;
+							// return text;
+						var span = $( '<span>' );
+						span.append( $( '<p class="tooltip title">' ).text(d.title) ); 
+						span.append( $( '<p class="tooltip authors">' ).text(d.authors.join(", ")) );
+						span.append( $( '<p class="tooltip journal">' ).text(d.journal) ); 
+						span.append( $( '<p class="tooltip year">' ).text(d.year) ); 
+						return span.html();
+
 						})
 					.on("mouseover", function(d) {
 							// var t = d3.select(this).select('.paperLabel');

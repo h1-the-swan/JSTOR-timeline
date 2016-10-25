@@ -92,7 +92,8 @@ text.numIndicator {
 
 .ui-tooltip {
 	/* font: 12px sans-serif;	 */
-	color: #546D89;
+	/* color: #546D89; */
+	color: #333333;
 	font-size: 12px;
 	border-radius: 2px;
 	box-shadow: 2px 2px 2px;

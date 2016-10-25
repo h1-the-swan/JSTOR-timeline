@@ -1079,7 +1079,7 @@ d3.json(json_fname, function(error, data_total) {
 					break;
 				}
 				var leftPos = $( this ).position().left;
-				if (leftPos < 0) {
+				if (leftPos < 20) {
 					var numWords = words.length;
 					words = words.slice(0, numWords-2);
 					var shortenedTitle = words.join(" ")+"...";

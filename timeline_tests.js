@@ -35,6 +35,9 @@ function constructTranslate(x, y) {
 }
 
 
+var wrap = d3.textwrap();
+
+
 d3.json(json_fname, function(error, data_total) {
 	data_total.forEach(function(d) {
 		d.lane = 0;
@@ -65,7 +68,7 @@ d3.json(json_fname, function(error, data_total) {
 			timeBegin = +d3.min(dataByYear, function(d) { return d.year; }) - 1,
 			timeEnd = +d3.max(dataByYear, function(d) { return d.year; }) + 1;
 
-		var m = [20, 15, 15, 15], //top right bottom left
+		var m = [20, 15, 15, 150], //top right bottom left
 			w = 960 - m[1] - m[3],
 			h = 350 - m[0] - m[2],
 			miniHeight = laneLength * 12 + 30,
@@ -137,15 +140,19 @@ d3.json(json_fname, function(error, data_total) {
 				.attr("stroke", "lightgray");
 		}
 
-		// main.append("g").selectAll(".laneText")
-		// 	.data(lanes)
-		// 	.enter().append("text")
-		// 	.text(function(d) {return d;})
-		// 	.attr("x", -m[1])
-		// 	.attr("y", function(d, i) {return y1(i + .5);})
-		// 	.attr("dy", ".5ex")
-		// 	.attr("text-anchor", "end")
-		// 	.attr("class", "laneText");
+		main.append("g")
+			.attr("transform", function() { return "translate(0,"+m[0]+")"})
+			.append("text")
+			.text("Number of influential articles in the year")
+			// .attr("x", -m[1])
+			// .attr("x", 0)
+			// .attr("y", 10)
+			.style("font-size", "14px")
+			.attr("text-anchor", "end")
+			.attr("class", "laneText");
+		
+		wrap.bounds({height: mainHeight, width: m[3]}).method("tspans");
+		d3.select(".laneText").call(wrap);
 		
 		//mini lanes and texts
 		var miniLaneLinesG = mini.append("g");
@@ -521,7 +528,8 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("class", "zoomIn")
 			.style("font-family", "FontAwesome")
 			.text("\uf196")  // http://fontawesome.io/icon/plus-square-o/
-			.attr("x", 10)
+			// .attr("x", 10)
+			.attr("x", w-m[1]-10)
 			.attr("y", 30)
 			// .attr("y", mainHeight / 2)
 			// .style("font-size", "1.5em")
@@ -533,7 +541,7 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("class", "zoomOut")
 			.style("font-family", "FontAwesome")
 			.text("\uf147")  // http://fontawesome.io/icon/minus-square-o/
-			.attr("x", 10)
+			.attr("x", w-m[1]-10)
 			.attr("y", 50)
 			// .attr("y", mainHeight / 2)
 			// .style("font-size", "1.5em")
@@ -635,7 +643,7 @@ d3.json(json_fname, function(error, data_total) {
 		// changeExtent(1970, 2000, initDuration, "cubic-in-out", initDelay);
 		// d3.transition("initDemoTransition").delay(initDelay + initDuration)
 		// 	.each("end", demoExpand);
-		demoInit();
+		// demoInit();
 
 		// not using this currently
 		function expandAll() {
@@ -643,6 +651,10 @@ d3.json(json_fname, function(error, data_total) {
 		}
 		var maxEF = d3.max(data_total, function(d) {return d.eigenfactor_score;});
 
+		function clearBrush() {
+			var mid = (brush.extent()[1] + brush.extent()[0]) / 2;
+			changeExtent(mid, mid, 0);
+		}
 		
 		function display() {
 			// note: calculating the brush extent using brush.extent() doesn't really work here (with transition ticks)
@@ -687,8 +699,7 @@ d3.json(json_fname, function(error, data_total) {
 					.transition().duration(300)
 					.style("opacity", 1);
 				clearBrushIcon.on("click", function() {
-					var mid = (brush.extent()[1] + brush.extent()[0]) / 2;
-					changeExtent(mid, mid, 0);
+					clearBrush();
 				});
 			}
 
@@ -1105,6 +1116,7 @@ d3.json(json_fname, function(error, data_total) {
 	}
 	
 	function demoInit() {
+		clearBrush();
 		var transitionTimes = [
 				750,  // 0: initial delay before anything happens
 				1000,  // 1: time to move the cursor to the mini area
@@ -1218,20 +1230,39 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("transform", "translate(" + minExtentScreen + "," + (mainHeight-20) + ")");
 		
 	}
+
+	function testChangeHeight() {
+		// changeExtent(Math.round(minExtent+1), Math.round(maxExtent+1), 250, "linear");
+		var chartHeight = +chart.attr("height");
+		var currMainHeight = +main.attr("height");
+		chart.transition().duration(1000).attr("height", chartHeight+100);
+		main.transition().duration(1000).attr("height", currMainHeight+100);
+		mini.transition().duration(1000)
+			.attr("transform", "translate(" + m[3] + "," + (currMainHeight+100 + m[0]) + ")");
+		d3.select("#clip rect").attr("height", currMainHeight+100);
+		display();
+		console.log(d3.select("#clip").attr("height"));
+	}
+
+	function minimizeTimeline() {
+		var currChartHeight = chart.attr("height");
+		var currMainHeight = main.attr("height");
+		main.attr("height", 0);
+		chart.attr("height", currChartHeight-currMainHeight);
+	}
 	
 	var testButton = d3.select("body").append("button")
 						.attr("id", "testButton")
 						.html("testButton")
 						.on("click", function() {
-							// changeExtent(Math.round(minExtent+1), Math.round(maxExtent+1), 250, "linear");
-							var chartHeight = +chart.attr("height");
-							var currMainHeight = +main.attr("height");
-							chart.transition().duration(1000).attr("height", chartHeight+100);
-							main.transition().duration(1000).attr("height", currMainHeight+100);
-							mini.transition().duration(1000)
-								.attr("transform", "translate(" + m[3] + "," + (currMainHeight+100 + m[0]) + ")");
-							d3.select("#clip rect").attr("height", currMainHeight+100);
-							display();
-							console.log(d3.select("#clip").attr("height"));
+							// minimizeTimeline();
+							demoInit();
+						});
+	
+	var minimizeButton = d3.select("body").append("button")
+						.attr("id", "minimizeButton")
+						.html("minimize")
+						.on("click", function() {
+							minimizeTimeline();
 						});
 });

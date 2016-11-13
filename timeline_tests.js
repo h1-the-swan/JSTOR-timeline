@@ -1254,8 +1254,39 @@ d3.json(json_fname, function(error, data_total) {
 	function minimizeTimeline() {
 		var currChartHeight = chart.attr("height");
 		var currMainHeight = main.attr("height");
-		main.attr("height", 0);
-		chart.attr("height", currChartHeight-currMainHeight);
+		var currMiniTranslate = mini.attr("transform");
+		main.transition("minimize").duration(500)
+			.attr("data-maximizedHeight", currMainHeight)
+			.attr("height", 0)
+			.style("opacity", 0)
+			.each("end", function() {
+				d3.select(this).attr("display", "none");
+			});
+			// .attr("display", "none");
+		chart.transition("minimize").duration(500)
+			.attr("data-maximizedHeight", currChartHeight)
+			.attr("height", currChartHeight-currMainHeight);
+		mini.transition("minimize").duration(500)
+			.attr("data-maximizedTranslate", currMiniTranslate)
+			.attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+	}
+
+	function maximizeTimeline() {
+		var maximizedChartHeight = chart.attr("data-maximizedHeight") || (h + m[0] + m[2]);
+		var maximizedMainHeight = main.attr("data-maximizedHeight") || mainHeight;
+		var maximizedMiniTranslate = mini.attr("data-maximizedTranslate") || "translate(" + m[3] + "," + (maximizedMainHeight + m[0]) + ")";
+		main.attr("display", "")
+			.transition("maximize").duration(500)
+			.attr("height", maximizedMainHeight)
+			.each("end", function() {
+				d3.select(this).transition("maximize").duration(300)
+					.style("opacity", 1);
+			});
+			// .style("opacity", 1);
+		chart.transition("maximize").duration(500)
+			.attr("height", maximizedChartHeight);
+		mini.transition("maximize").duration(500)
+			.attr("transform", maximizedMiniTranslate);
 	}
 	
 	var testButton = d3.select("body").append("button")
@@ -1271,5 +1302,12 @@ d3.json(json_fname, function(error, data_total) {
 						.html("minimize")
 						.on("click", function() {
 							minimizeTimeline();
+						});
+
+	var maximizeButton = d3.select("body").append("button")
+						.attr("id", "maximizeButton")
+						.html("maximize")
+						.on("click", function() {
+							maximizeTimeline();
 						});
 });

@@ -66,9 +66,10 @@ circle {
 }
 
 text.numIndicator {
-	fill: black;
-	color: black;
-	font-weight: bold;
+	fill: #ffffff;
+	color: #ffffff;
+	font-size: 13px;
+	/* font-weight: bold; */
 	pointer-events: none;
 }
 

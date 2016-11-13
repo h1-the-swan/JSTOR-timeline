@@ -1140,12 +1140,16 @@ d3.json(json_fname, function(error, data_total) {
 		// d3.transition("initDemoTransition").delay(initDelay + initDuration)
 		// 	.each("end", demoExpand);
 		var extentSelect = mini.select(".brush").select(".extent");
-		var initBrushRange = [1970, 2000],
-			initBrushPosition = +extentSelect.attr("x");
+		var initBrushRange = [1970, 2000];
+		changeExtent(initBrushRange[0], initBrushRange[0], 0);
+		// var initBrushPosition = +extentSelect.attr("x");
+		var initBrushPosition = x(brush.extent()[1]) + m[3];
+		console.log(initBrushPosition);
 		cursorIcon.transition().delay(transitionTimes[0])
 			.duration(transitionTimes[1])
 			.attr("transform", 
-					constructTranslate(initBrushPosition+15, mainHeight+m[0]+(miniHeight/2))
+					// constructTranslate(initBrushPosition+15, mainHeight+m[0]+(miniHeight/2))
+					constructTranslate(initBrushPosition, mainHeight+m[0]+(miniHeight/2))
 					)
 			.each("end", function() {
 				demoDrawBrush();
@@ -1181,11 +1185,14 @@ d3.json(json_fname, function(error, data_total) {
 
 			var demoYearItem = d3.select($( '.yearItem' )[17]);
 			var demoYearMark = demoYearItem.select(".yearMark");
+			console.log(demoYearItem);
+			console.log(demoYearMark);
+			console.log(demoYearMark.attr("r"));
 			var translateStr = demoYearItem.attr("transform");
 			console.log(translateStr);
 			var translateCoord = deconstructTranslate(translateStr);
-			translateCoord.x = translateCoord.x + m[0];
-			translateCoord.y = translateCoord.y + m[3] + 20;
+			translateCoord.x = translateCoord.x + m[3];
+			translateCoord.y = translateCoord.y + m[0] + (+demoYearMark.attr("r"));
 			var translate = constructTranslate(translateCoord.x, translateCoord.y);
 			// move the cursor to a year, then manually expand the year
 			cursorIcon.transition("demoExpand").delay(transitionTimes[3])

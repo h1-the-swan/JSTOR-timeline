@@ -140,15 +140,16 @@ d3.json(json_fname, function(error, data_total) {
 				.attr("stroke", "lightgray");
 		}
 
-		main.append("g")
-			.attr("transform", function() { return "translate(0,"+m[0]+")"})
+		chart.append("g")
+			// .attr("transform", function() { return "translate(0,"+m[0]+")"})
+			.attr("transform", "translate(0,"+m[0]+")")
 			.append("text")
 			.text("Number of influential articles in the year")
 			// .attr("x", -m[1])
 			// .attr("x", 0)
 			// .attr("y", 10)
 			.style("font-size", "14px")
-			.attr("text-anchor", "end")
+			// .attr("text-anchor", "end")
 			.attr("class", "laneText");
 		
 		wrap.bounds({height: mainHeight, width: m[3]}).method("tspans");
@@ -1090,7 +1091,8 @@ d3.json(json_fname, function(error, data_total) {
 					break;
 				}
 				var leftPos = $( this ).position().left;
-				if (leftPos < 20) {
+				// if (leftPos < 20) {
+				if (leftPos < m[3]) {
 					var numWords = words.length;
 					words = words.slice(0, numWords-2);
 					var shortenedTitle = words.join(" ")+"...";
@@ -1252,6 +1254,7 @@ d3.json(json_fname, function(error, data_total) {
 	}
 
 	function minimizeTimeline() {
+		clearBrush();
 		var currChartHeight = chart.attr("height");
 		var currMainHeight = main.attr("height");
 		var currMiniTranslate = mini.attr("transform");
@@ -1269,6 +1272,8 @@ d3.json(json_fname, function(error, data_total) {
 		mini.transition("minimize").duration(500)
 			.attr("data-maximizedTranslate", currMiniTranslate)
 			.attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+		// extentLines.forEach(function(sel) {sel.style("display", "none");});
+		display();
 	}
 
 	function maximizeTimeline() {

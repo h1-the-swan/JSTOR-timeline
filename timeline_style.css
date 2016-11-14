@@ -4,6 +4,7 @@ body {
 
 .chart {
 	shape-rendering: crispEdges;
+	max-width: 960px;
 }
 
 g {

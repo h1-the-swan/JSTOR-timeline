@@ -104,10 +104,14 @@ d3.json(json_fname, function(error, data_total) {
 				.domain(d3.extent(dataByYear, function(d) { return d.sum_eigenfactor; }))
 				.range([0, 5]);
 
+		var chartWidth = w + m[1] + m[3],
+			chartHeight = h + m[0] + m[2];
 		var chart = d3.select("#timeline")
 					.append("svg")
-					.attr("width", w + m[1] + m[3])
-					.attr("height", h + m[0] + m[2])
+					// .attr("width", chartWidth)
+					// .attr("height", chartHeight)
+					.attr("viewBox", "0 0 " + chartWidth + " " + chartHeight)
+					.attr("preserveAspectRatio", "xMidYMid meet")
 					.attr("class", "chart");
 		
 		chart.append("defs").append("clipPath")
@@ -142,7 +146,7 @@ d3.json(json_fname, function(error, data_total) {
 
 		chart.append("g")
 			// .attr("transform", function() { return "translate(0,"+m[0]+")"})
-			.attr("transform", "translate(0,"+m[0]+")")
+			.attr("transform", "translate(0,"+(m[0]+10)+")")
 			.append("text")
 			.text("Number of influential articles in the year")
 			// .attr("x", -m[1])

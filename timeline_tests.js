@@ -108,13 +108,10 @@ d3.json(json_fname, function(error, data_total) {
 		var chartWidth = w + m[1] + m[3],
 			chartHeight = h + m[0] + m[2];
 
-		d3.select("#timeline").append("span")
+		var toggleMinimizeSwitch = d3.select("#timeline").append("span")
 					.attr("class", "toggleMinimize")
 					.text("Minimize")
-					.on("click", function() {
-						toggleMinimize();
-						d3.select(this).text(chart.classed("minimized") ? "Maximize" : "Minimize");
-					});
+					.on("click", toggleMinimize);
 
 		var chart = d3.select("#timeline")
 					.append("svg")
@@ -1331,6 +1328,7 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("transform", "translate(0," + m[0] + ")")
 			.each("end", clearBrush);
 		// extentLines.forEach(function(sel) {sel.style("display", "none");});
+		toggleMinimizeSwitch.text("Maximize");
 		contract();
 		display();
 	}
@@ -1354,11 +1352,13 @@ d3.json(json_fname, function(error, data_total) {
 			// .attr("height", maximizedChartHeight);
 		miniContainer.transition("maximize").duration(500)
 			.attr("transform", maximizedMiniTranslate);
+		toggleMinimizeSwitch.text("Minimize");
 		display();
 	}
 
 	function toggleMinimize() {
-		if (chart.classed("minimized")) {
+		var isMinimized = chart.classed("minimized");
+		if (isMinimized) {
 			maximizeTimeline();
 		} else {
 			minimizeTimeline();

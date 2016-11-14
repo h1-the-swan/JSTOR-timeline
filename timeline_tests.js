@@ -39,6 +39,7 @@ var wrap = d3.textwrap();
 
 
 d3.json(json_fname, function(error, data_total) {
+	d3.select(window).on("resize", display)
 	data_total.forEach(function(d) {
 		d.lane = 0;
 	});
@@ -110,6 +111,8 @@ d3.json(json_fname, function(error, data_total) {
 					.append("svg")
 					// .attr("width", chartWidth)
 					// .attr("height", chartHeight)
+					.attr("data-maximizedHeight", chartHeight)
+					.attr("data-currHeight", chartHeight)
 					.attr("viewBox", "0 0 " + chartWidth + " " + chartHeight)
 					.attr("preserveAspectRatio", "xMidYMid meet")
 					.attr("class", "chart");
@@ -120,8 +123,15 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("width", w)
 			.attr("height", mainHeight);
 
-		var main = chart.append("g")
-					.attr("transform", "translate(" + m[3] + "," + m[0] + ")")
+		var mainContainer = chart.append("g")
+					.attr("transform", "translate(0," + m[0] + ")")
+					.attr("width", chartWidth)
+					.attr("height", mainHeight);
+
+		// var main = chart.append("g")
+		var main = mainContainer.append("g")
+					// .attr("transform", "translate(" + m[3] + "," + m[0] + ")")
+					.attr("transform", "translate(" + m[3] + ",0)")
 					.attr("width", w)
 					.attr("height", mainHeight)
 					.attr("class", "main");
@@ -144,9 +154,8 @@ d3.json(json_fname, function(error, data_total) {
 				.attr("stroke", "lightgray");
 		}
 
-		chart.append("g")
-			// .attr("transform", function() { return "translate(0,"+m[0]+")"})
-			.attr("transform", "translate(0,"+(m[0]+10)+")")
+		mainContainer.append("g")
+			.attr("transform", "translate(0,"+(m[0])+")")
 			.append("text")
 			.text("Number of influential articles in the year")
 			// .attr("x", -m[1])
@@ -170,6 +179,17 @@ d3.json(json_fname, function(error, data_total) {
 				.attr("class", "laneLine")
 				.attr("stroke", "lightgray");
 		}
+
+		// chart.append("g")
+		// 	.attr("transform", "translate(0,"+(m[0]+10)+")")
+		// 	.append("text")
+		// 	.text("Number of influential articles in the year")
+		// 	// .attr("x", -m[1])
+		// 	// .attr("x", 0)
+		// 	// .attr("y", 10)
+		// 	.style("font-size", "14px")
+		// 	// .attr("text-anchor", "end")
+		// 	.attr("class", "laneText");
 
 		// mini.append("g").selectAll(".laneText")
 		// 	.data(lanes)
@@ -1258,11 +1278,11 @@ d3.json(json_fname, function(error, data_total) {
 	}
 
 	function minimizeTimeline() {
-		clearBrush();
-		var currChartHeight = chart.attr("height");
-		var currMainHeight = main.attr("height");
+		// clearBrush();
+		var currChartHeight = chart.attr("data-maximizedHeight");
+		var currMainHeight = mainContainer.attr("height");
 		var currMiniTranslate = mini.attr("transform");
-		main.transition("minimize").duration(500)
+		mainContainer.transition("minimize").duration(500)
 			.attr("data-maximizedHeight", currMainHeight)
 			.attr("height", 0)
 			.style("opacity", 0)
@@ -1270,21 +1290,25 @@ d3.json(json_fname, function(error, data_total) {
 				d3.select(this).attr("display", "none");
 			});
 			// .attr("display", "none");
-		chart.transition("minimize").duration(500)
-			.attr("data-maximizedHeight", currChartHeight)
-			.attr("height", currChartHeight-currMainHeight);
+		chart
+			.transition("minimize").duration(500)
+			// .attr("data-maximizedHeight", currChartHeight)
+			.attr("data-currHeight", currChartHeight-currMainHeight)
+			.attr("viewBox", "0 0 " + chartWidth + " " + (currChartHeight-currMainHeight));
+			// .attr("height", currChartHeight-currMainHeight);
 		mini.transition("minimize").duration(500)
 			.attr("data-maximizedTranslate", currMiniTranslate)
-			.attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+			.attr("transform", "translate(" + m[3] + "," + m[0] + ")")
+			.each("end", clearBrush);
 		// extentLines.forEach(function(sel) {sel.style("display", "none");});
 		display();
 	}
 
 	function maximizeTimeline() {
 		var maximizedChartHeight = chart.attr("data-maximizedHeight") || (h + m[0] + m[2]);
-		var maximizedMainHeight = main.attr("data-maximizedHeight") || mainHeight;
+		var maximizedMainHeight = mainContainer.attr("data-maximizedHeight") || mainHeight;
 		var maximizedMiniTranslate = mini.attr("data-maximizedTranslate") || "translate(" + m[3] + "," + (maximizedMainHeight + m[0]) + ")";
-		main.attr("display", "")
+		mainContainer.attr("display", "")
 			.transition("maximize").duration(500)
 			.attr("height", maximizedMainHeight)
 			.each("end", function() {
@@ -1293,9 +1317,12 @@ d3.json(json_fname, function(error, data_total) {
 			});
 			// .style("opacity", 1);
 		chart.transition("maximize").duration(500)
-			.attr("height", maximizedChartHeight);
+			.attr("data-currHeight", maximizedChartHeight)
+			.attr("viewBox", "0 0 " + chartWidth + " " + maximizedChartHeight);
+			// .attr("height", maximizedChartHeight);
 		mini.transition("maximize").duration(500)
 			.attr("transform", maximizedMiniTranslate);
+		display();
 	}
 	
 	var testButton = d3.select("body").append("button")

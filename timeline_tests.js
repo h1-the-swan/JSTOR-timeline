@@ -115,7 +115,12 @@ d3.json(json_fname, function(error, data_total) {
 					.attr("data-currHeight", chartHeight)
 					.attr("viewBox", "0 0 " + chartWidth + " " + chartHeight)
 					.attr("preserveAspectRatio", "xMidYMid meet")
-					.attr("class", "chart");
+					.attr("class", "chart")
+					.on("click", function() {
+						if (chart.classed("minimized")) {
+							maximizeTimeline();
+						}
+					});
 		
 		chart.append("defs").append("clipPath")
 			.attr("id", "clip")
@@ -1305,7 +1310,7 @@ d3.json(json_fname, function(error, data_total) {
 				d3.select(this).attr("display", "none");
 			});
 			// .attr("display", "none");
-		chart
+		chart.classed("minimized", true)
 			.transition("minimize").duration(500)
 			// .attr("data-maximizedHeight", currChartHeight)
 			.attr("data-currHeight", currChartHeight-currMainHeight)
@@ -1332,7 +1337,8 @@ d3.json(json_fname, function(error, data_total) {
 					.style("opacity", 1);
 			});
 			// .style("opacity", 1);
-		chart.transition("maximize").duration(500)
+		chart.classed("minimized", false)
+			.transition("maximize").duration(500)
 			.attr("data-currHeight", maximizedChartHeight)
 			.attr("viewBox", "0 0 " + chartWidth + " " + maximizedChartHeight);
 			// .attr("height", maximizedChartHeight);

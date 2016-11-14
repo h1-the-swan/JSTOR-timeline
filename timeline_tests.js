@@ -107,6 +107,15 @@ d3.json(json_fname, function(error, data_total) {
 
 		var chartWidth = w + m[1] + m[3],
 			chartHeight = h + m[0] + m[2];
+
+		d3.select("#timeline").append("span")
+					.attr("class", "toggleMinimize")
+					.text("Minimize")
+					.on("click", function() {
+						toggleMinimize();
+						d3.select(this).text(chart.classed("minimized") ? "Maximize" : "Minimize");
+					});
+
 		var chart = d3.select("#timeline")
 					.append("svg")
 					// .attr("width", chartWidth)
@@ -1322,6 +1331,7 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("transform", "translate(0," + m[0] + ")")
 			.each("end", clearBrush);
 		// extentLines.forEach(function(sel) {sel.style("display", "none");});
+		contract();
 		display();
 	}
 
@@ -1346,6 +1356,14 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("transform", maximizedMiniTranslate);
 		display();
 	}
+
+	function toggleMinimize() {
+		if (chart.classed("minimized")) {
+			maximizeTimeline();
+		} else {
+			minimizeTimeline();
+		}
+	}
 	
 	var testButton = d3.select("body").append("button")
 						.attr("id", "testButton")
@@ -1353,19 +1371,5 @@ d3.json(json_fname, function(error, data_total) {
 						.on("click", function() {
 							// minimizeTimeline();
 							demoInit();
-						});
-	
-	var minimizeButton = d3.select("body").append("button")
-						.attr("id", "minimizeButton")
-						.html("minimize")
-						.on("click", function() {
-							minimizeTimeline();
-						});
-
-	var maximizeButton = d3.select("body").append("button")
-						.attr("id", "maximizeButton")
-						.html("maximize")
-						.on("click", function() {
-							maximizeTimeline();
 						});
 });

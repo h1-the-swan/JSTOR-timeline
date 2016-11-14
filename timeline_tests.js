@@ -35,7 +35,7 @@ function constructTranslate(x, y) {
 }
 
 
-var wrap = d3.textwrap();
+var wrap = d3.textwrap().method("tspans");
 
 
 d3.json(json_fname, function(error, data_total) {
@@ -126,7 +126,8 @@ d3.json(json_fname, function(error, data_total) {
 		var mainContainer = chart.append("g")
 					.attr("transform", "translate(0," + m[0] + ")")
 					.attr("width", chartWidth)
-					.attr("height", mainHeight);
+					.attr("height", mainHeight)
+					.attr("class", "mainContainer");
 
 		// var main = chart.append("g")
 		var main = mainContainer.append("g")
@@ -136,8 +137,16 @@ d3.json(json_fname, function(error, data_total) {
 					.attr("height", mainHeight)
 					.attr("class", "main");
 
-		var mini = chart.append("g")
-					.attr("transform", "translate(" + m[3] + "," + (mainHeight + m[0]) + ")")
+		var miniContainer = chart.append("g")
+					.attr("transform", "translate(0," + (mainHeight + m[0]) + ")")
+					.attr("width", chartWidth)
+					.attr("height", mainHeight)
+					.attr("class", "miniContainer");
+
+		// var mini = chart.append("g")
+		var mini = miniContainer.append("g")
+					// .attr("transform", "translate(" + m[3] + "," + (mainHeight + m[0]) + ")")
+					.attr("transform", "translate(" + m[3] + ",0)")
 					.attr("width", w)
 					.attr("height", miniHeight)
 					.attr("class", "mini");
@@ -154,7 +163,7 @@ d3.json(json_fname, function(error, data_total) {
 				.attr("stroke", "lightgray");
 		}
 
-		mainContainer.append("g")
+		var mainLabel = mainContainer.append("g")
 			.attr("transform", "translate(0,"+(m[0])+")")
 			.append("text")
 			.text("Number of influential articles in the year")
@@ -165,8 +174,10 @@ d3.json(json_fname, function(error, data_total) {
 			// .attr("text-anchor", "end")
 			.attr("class", "laneText");
 		
-		wrap.bounds({height: mainHeight, width: m[3]}).method("tspans");
-		d3.select(".laneText").call(wrap);
+		// wrap.bounds({height: mainHeight, width: m[3]}).method("tspans");
+		wrap.bounds({height: mainHeight, width: (m[3] * .9)});
+		// d3.select(".laneText").call(wrap);
+		mainLabel.call(wrap);
 		
 		//mini lanes and texts
 		var miniLaneLinesG = mini.append("g");
@@ -180,16 +191,20 @@ d3.json(json_fname, function(error, data_total) {
 				.attr("stroke", "lightgray");
 		}
 
-		// chart.append("g")
-		// 	.attr("transform", "translate(0,"+(m[0]+10)+")")
-		// 	.append("text")
-		// 	.text("Number of influential articles in the year")
-		// 	// .attr("x", -m[1])
-		// 	// .attr("x", 0)
-		// 	// .attr("y", 10)
-		// 	.style("font-size", "14px")
-		// 	// .attr("text-anchor", "end")
-		// 	.attr("class", "laneText");
+		var miniLabel = miniContainer.append("g")
+			.attr("transform", "translate(0,"+ m[0] +")")
+			.append("text")
+			.text("Select date range to focus on:")
+			// .attr("x", -m[1])
+			// .attr("x", 0)
+			// .attr("y", 10)
+			.style("font-size", "14px")
+			// .attr("text-anchor", "end")
+			.attr("class", "laneText");
+
+		wrap.bounds({height: miniHeight, width: (m[3] * .9)});
+		// d3.select(".laneText").call(wrap);
+		miniLabel.call(wrap);
 
 		// mini.append("g").selectAll(".laneText")
 		// 	.data(lanes)
@@ -1281,7 +1296,7 @@ d3.json(json_fname, function(error, data_total) {
 		// clearBrush();
 		var currChartHeight = chart.attr("data-maximizedHeight");
 		var currMainHeight = mainContainer.attr("height");
-		var currMiniTranslate = mini.attr("transform");
+		var currMiniTranslate = miniContainer.attr("transform");
 		mainContainer.transition("minimize").duration(500)
 			.attr("data-maximizedHeight", currMainHeight)
 			.attr("height", 0)
@@ -1296,9 +1311,10 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("data-currHeight", currChartHeight-currMainHeight)
 			.attr("viewBox", "0 0 " + chartWidth + " " + (currChartHeight-currMainHeight));
 			// .attr("height", currChartHeight-currMainHeight);
-		mini.transition("minimize").duration(500)
+		miniContainer.transition("minimize").duration(500)
 			.attr("data-maximizedTranslate", currMiniTranslate)
-			.attr("transform", "translate(" + m[3] + "," + m[0] + ")")
+			// .attr("transform", "translate(" + m[3] + "," + m[0] + ")")
+			.attr("transform", "translate(0," + m[0] + ")")
 			.each("end", clearBrush);
 		// extentLines.forEach(function(sel) {sel.style("display", "none");});
 		display();
@@ -1307,7 +1323,7 @@ d3.json(json_fname, function(error, data_total) {
 	function maximizeTimeline() {
 		var maximizedChartHeight = chart.attr("data-maximizedHeight") || (h + m[0] + m[2]);
 		var maximizedMainHeight = mainContainer.attr("data-maximizedHeight") || mainHeight;
-		var maximizedMiniTranslate = mini.attr("data-maximizedTranslate") || "translate(" + m[3] + "," + (maximizedMainHeight + m[0]) + ")";
+		var maximizedMiniTranslate = miniContainer.attr("data-maximizedTranslate") || "translate(" + m[3] + "," + (maximizedMainHeight + m[0]) + ")";
 		mainContainer.attr("display", "")
 			.transition("maximize").duration(500)
 			.attr("height", maximizedMainHeight)
@@ -1320,7 +1336,7 @@ d3.json(json_fname, function(error, data_total) {
 			.attr("data-currHeight", maximizedChartHeight)
 			.attr("viewBox", "0 0 " + chartWidth + " " + maximizedChartHeight);
 			// .attr("height", maximizedChartHeight);
-		mini.transition("maximize").duration(500)
+		miniContainer.transition("maximize").duration(500)
 			.attr("transform", maximizedMiniTranslate);
 		display();
 	}

@@ -30,9 +30,11 @@ g {
 }
 
 .tick text {
-	color: #333333
+	color: #333333;
+	font-size: 13px;
 }
 
+/*
 .main .tick text {
 	font-size: 14px;
 	font-weight: bold;
@@ -41,6 +43,7 @@ g {
 .mini .tick text {
 	font-size: 13px;
 }
+*/
 
 .yearItem circle {
 	fill: #9F1D21;
@@ -87,7 +90,7 @@ circle {
 text.numIndicator {
 	fill: #ffffff;
 	color: #ffffff;
-	font-size: 13px;
+	font-size: 11px;
 	/* font-weight: bold; */
 	pointer-events: none;
 }

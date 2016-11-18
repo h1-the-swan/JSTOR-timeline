@@ -29,6 +29,12 @@ g {
 	overflow: visible;
 }
 
+.xaxis path {
+	stroke: #333333;
+	fill: none;
+	stroke-width: 2px;
+}
+
 .tick text {
 	color: #333333;
 	font-size: 13px;

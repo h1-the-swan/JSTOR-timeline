@@ -19,6 +19,9 @@ if (urlTopicName) {
 	$( '#timelineHeading' ).text("Article timeline for topic: " + urlTopicName);
 }
 
+// should the visualization be minimized at first? true if yes (by url parameter 'minimize')
+var minimizedInit = (getParameterByName('minimize')!=null) ? true : false;;
+
 function deconstructTranslate(translateString) {
 	// takes a string like "translate(100,200)" and returns the numbers [100, 200]
 	translateString = translateString.replace("(", "").replace(")", "");
@@ -174,21 +177,34 @@ d3.json(json_fname, function(error, data_total) {
 				.attr("stroke", "lightgray");
 		}
 
-		var mainLabel = mainContainer.append("g")
-			.attr("transform", "translate(0,"+(m[0])+")")
-			.append("text")
+		var mainLabelG = mainContainer.append("g")
+			.attr("transform", "translate(0,"+(m[0])+")");
+		var mainLabel = mainLabelG.append("text")
 			.text("Number of influential articles in the year")
 			// .attr("x", -m[1])
 			// .attr("x", 0)
 			// .attr("y", 10)
 			.style("font-size", "14px")
 			// .attr("text-anchor", "end")
-			.attr("class", "laneText");
-		
+			.attr("class", "laneText")
+			.attr("id", "mainLabel");
+	
 		// wrap.bounds({height: mainHeight, width: m[3]}).method("tspans");
 		wrap.bounds({height: mainHeight, width: (m[3] * .9)});
 		// d3.select(".laneText").call(wrap);
 		mainLabel.call(wrap);
+
+		var subOffset = $( '#mainLabel' ).height();  // y offset for the sub label
+		var mainLabelSub = mainLabelG.append("text")
+			.attr("transform", "translate(0," + subOffset + ")")
+			.text("Size of circles indicates level of influence")
+			.style("font-size", "11px")
+			.attr("class", "laneText")
+			.attr("id", "mainLabelSub");
+
+		wrap.bounds({height: mainHeight - subOffset, width: (m[3] * .9)});
+		mainLabelSub.call(wrap);
+		
 		
 		//mini lanes and texts
 		var miniLaneLinesG = mini.append("g");
@@ -312,6 +328,7 @@ d3.json(json_fname, function(error, data_total) {
 						d.x = 0;  //for now
 						d.y = 0;  //for now
 						d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
+						// d.radius = mainMinRad + (d.values.length*2);
 						return "translate(" + d.x + "," + d.y + ")";
 					});
 
@@ -321,7 +338,8 @@ d3.json(json_fname, function(error, data_total) {
 					.on('mouseover', function(d) {
 						contract();
 						var sel = paperItems.filter(function(dd) {return dd.year===d.year});
-						expand(sel);
+						var thisYearItem = d3.select(this);
+						expand(sel, thisYearItem);
 						})
 					// .on('mouseout', contract)
 					.style(stylesVisible);
@@ -337,6 +355,7 @@ d3.json(json_fname, function(error, data_total) {
 					.data(function(d) {return d.values})
 					.enter().append("g")
 					.attr("class", "paperItem")
+					.attr("data-year", function(d) {return d.year;})
 					.attr("transform", function(d, i) {
 						d.x = 0;  //for now
 						d.y = 0;  //for now
@@ -575,31 +594,49 @@ d3.json(json_fname, function(error, data_total) {
 				// changeExtent(Math.round(minExtent+1), Math.round(maxExtent+1), scrollDur, "linear");
 				moveBrush('right');
 				});
-		scrollItems.append("text")
+
+		var zoomItems = scrollItems.append("g")
+							.attr("class", "zoomItems")
+							.attr("transform", "translate(" + (w-m[1]-10) + ",30)")
+							.style("opacity", .01)
+							.on("mouseover", zoomMouseOver)
+							.on("mouseout", zoomMouseOut);
+		// scrollItems.append("text")
+		zoomItems.append("text")
 			.attr("class", "zoomIn")
 			.style("font-family", "FontAwesome")
 			.text("\uf196")  // http://fontawesome.io/icon/plus-square-o/
 			// .attr("x", 10)
-			.attr("x", w-m[1]-10)
-			.attr("y", 30)
 			// .attr("y", mainHeight / 2)
+			// .attr("x", w-m[1]-10)
+			// .attr("y", 30)
 			// .style("font-size", "1.5em")
 			.on("click", function() {
 				// changeExtent(Math.round(minExtent+1), Math.round(maxExtent-1), scrollDur, "linear");
 				moveBrush('zoomIn')
 				});
-		scrollItems.append("text")
+		zoomItems.append("text")
 			.attr("class", "zoomOut")
 			.style("font-family", "FontAwesome")
 			.text("\uf147")  // http://fontawesome.io/icon/minus-square-o/
-			.attr("x", w-m[1]-10)
-			.attr("y", 50)
 			// .attr("y", mainHeight / 2)
+			// .attr("x", w-m[1]-10)
+			// .attr("y", 50)
+			.attr("y", 20)
 			// .style("font-size", "1.5em")
 			.on("click", function() {
 				// changeExtent(Math.round(minExtent-1), Math.round(maxExtent+1), scrollDur, "linear");
 				moveBrush('zoomOut');
 				});
+
+		function zoomMouseOver() {
+			// $( '.zoomIn, .zoomOut' ).fadeTo(400, 1);
+			$( '.zoomItems' ).stop().fadeTo(400, 1);
+		}
+		function zoomMouseOut() {
+			// $( '.zoomIn, .zoomOut' ).fadeTo(400, .01);
+			$( '.zoomItems' ).stop().fadeTo(400, .01);
+		}
 
 		// Icon to clear the brush. Finish initializing it in display()
 		// var clearBrushIcon = d3.select(".brush").append("text")
@@ -631,6 +668,10 @@ d3.json(json_fname, function(error, data_total) {
 			];
 		// brush.extent(brushInit);
 		mini.select(".brush").call(brush.extent(brushInit));
+
+		if (minimizedInit) {
+			minimizeTimeline();
+		}
 
 		display();
 
@@ -735,9 +776,11 @@ d3.json(json_fname, function(error, data_total) {
 			}
 			// hide the zoomIn button if we're zoomed in too far
 			if (maxExtent - minExtent <= 2) {
-				d3.select(".zoomIn").style("display", "none");
+				// d3.select(".zoomIn").style("display", "none");
+				d3.select(".zoomIn").classed("hidden", true);
 			} else {
-				d3.select(".zoomIn").style("display", "");
+				// d3.select(".zoomIn").style("display", "");
+				d3.select(".zoomIn").classed("hidden", false);
 			}
 
 			if (brush.empty()) {
@@ -748,9 +791,10 @@ d3.json(json_fname, function(error, data_total) {
 					// .style("z-index", -99)
 					.attr("transform", constructTranslate(maxExtentScreen-2, 15))
 					.transition().duration(300)
-					.style("opacity", 1);
+					.style("opacity", .4);
 				clearBrushIcon.on("click", function() {
 					clearBrush();
+					contract();
 				});
 			}
 
@@ -981,21 +1025,31 @@ d3.json(json_fname, function(error, data_total) {
 		return 2.1*mainMinRad*i+3*mainMinRad;
 	};
 	// function expand(yearData) {
-	function expand(sel) {
+	function expand(sel, yearItem) {
+		var thisYear = sel.attr("data-year");
+		var thisYearItem = yearItems.filter(function(d) {return d.year==thisYear});
+		console.log(thisYearItem);
 		// contract();
 		var dur = 500;
 		// var sel = paperItems.filter(function(d) {return d.year===yearData.year});
 		var transitionStartStyle = {'pointer-events': 'none', 'cursor': 'default'},
 			transitionEndStyle = {'pointer-events': 'auto', 'cursor': 'pointer'};
 		// sel.style("pointer-events", "none")
+		var line = d3.svg.line().x(function(d) {return d[0]}).y(function(d) {return d[1]});
+		// linedata will be an array of [x, y] values that start at the year circle and track the paper circles
+		var linedata = [];
+		linedata.push([0,0]);
 		sel.style(transitionStartStyle)
 			.transition().duration(dur)
 			.attr("transform", function(d, i) {
+				linedata.push([afterTransitionX(d, i), afterTransitionY(d, i)]);
 				return "translate(" + afterTransitionX(d, i) + "," + afterTransitionY(d, i) + ")";
 			})
 			.each("start", function() {d3.select(this).classed("expanded", true)})
 			// .each("end", function() {d3.select(this).style("pointer-events", "auto");});
-			.each("end", function() {d3.select(this).style(transitionEndStyle);});
+			.each("end", function() {
+				d3.select(this).style(transitionEndStyle);
+			});
 			
 			// .style("pointer-events", "auto");
 		sel.selectAll(".paperMark").transition().duration(dur)
@@ -1017,10 +1071,14 @@ d3.json(json_fname, function(error, data_total) {
 			.duration(dur)
 			.style("opacity", 1);
 		// labelsCollisionDetect();
-		d3.transition().duration(dur).each("end", display);
+		d3.transition().duration(dur).each("end", function() {
+			thisYearItem.append("path").datum(linedata).attr("class", "joinLine").attr("d", line);
+			display()
+		});
 	}
 	// function contract(yearData) {
 	function contract() {
+		d3.selectAll(".joinLine").remove();
 		var dur = 500;
 		// var sel = paperItems.filter(function(d) {return d.year===yearData.year});
 		var sel = d3.selectAll(".expanded");
@@ -1132,7 +1190,6 @@ d3.json(json_fname, function(error, data_total) {
 			// thisLabel.text(d.title);
 			thisLabel.html(wrapInAnchor(d.stable_url, d.title));
 			var words = d.title.split(" ");
-			console.log(words);
 			var giveUpThreshold = 20;
 			var i = 0;
 			while (true) {
@@ -1196,7 +1253,6 @@ d3.json(json_fname, function(error, data_total) {
 		changeExtent(initBrushRange[0], initBrushRange[0], 0);
 		// var initBrushPosition = +extentSelect.attr("x");
 		var initBrushPosition = x(brush.extent()[1]) + m[3];
-		console.log(initBrushPosition);
 		cursorIcon.transition().delay(transitionTimes[0])
 			.duration(transitionTimes[1])
 			.attr("transform", 
@@ -1211,7 +1267,6 @@ d3.json(json_fname, function(error, data_total) {
 			changeExtent(initBrushRange[0], initBrushRange[1], transitionTimes[2]);
 			var minExtentScreen = +extentSelect.attr("x");
 			var maxExtentScreen = minExtentScreen + (+extentSelect.attr("width"));
-			console.log(brush.extent());
 			x1.domain(brush.extent());
 			cursorIcon.transition()
 				.duration(transitionTimes[2])

@@ -2,6 +2,10 @@ body {
 	font-family: "Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;
 }
 
+.hidden {
+	visibility: hidden;
+}
+
 .mobileAlt {
 	display: none;
 }
@@ -63,7 +67,7 @@ g {
 
 .paperItem circle {
 	fill: #9F1D21;
-	fill-opacity: .5;
+	fill-opacity: .7;
 	stroke-width: 6;	
 }
 
@@ -77,6 +81,15 @@ g {
 	color: #546D89;
 	font-size: 13px;
 	text-decoration: underline;
+}
+
+.joinLine {
+	fill: none;
+	stroke: #9F1D21;
+	stroke-width: 3px;
+	opacity: .3;
+	pointer-events: none;
+	stroke-dasharray: 5,3;
 }
 
 .brush {
@@ -117,6 +130,7 @@ text.numIndicator {
 
 .clearBrushIcon {
 	cursor: default;
+	opacity: .4;
 }
 
 .ui-tooltip {

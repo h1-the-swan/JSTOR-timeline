@@ -33,6 +33,26 @@
 		</div>
 		<a href="?m=circle">Circles</a> <br>
 		<a href="?m=icon">Icons</a>
+		<script type="text/javascript" charset="utf-8">
+			var json_endpoint = 'Climate_change.json';
+			
+			// http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+			function getParameterByName(name, url) {
+				if (!url) url = window.location.href;
+				name = name.replace(/[\[\]]/g, "\\$&");
+				var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+					results = regex.exec(url);
+				if (!results) return null;
+				if (!results[2]) return '';
+				return decodeURIComponent(results[2].replace(/\+/g, " "));
+			}
+
+			var urlTopicName = getParameterByName('topic');
+			if (urlTopicName) {
+				json_endpoint = urlTopicName + ".json";
+				$( '#timelineHeading' ).text("Article timeline for topic: " + urlTopicName);
+			}
+		</script>
 		<script src="timeline_tests.js" charset="utf-8"></script>
 	</body>
 </html>

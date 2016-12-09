@@ -1,6 +1,5 @@
 // building off http://bl.ocks.org/bunkat/2338034
 //
-var json_fname = 'Climate_change.json'
 
 // http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
 function getParameterByName(name, url) {
@@ -11,12 +10,6 @@ function getParameterByName(name, url) {
 	if (!results) return null;
 	if (!results[2]) return '';
 	return decodeURIComponent(results[2].replace(/\+/g, " "));
-}
-
-var urlTopicName = getParameterByName('topic');
-if (urlTopicName) {
-	json_fname = urlTopicName + ".json";
-	$( '#timelineHeading' ).text("Article timeline for topic: " + urlTopicName);
 }
 
 // should the visualization be minimized at first? true if yes (by url parameter 'minimize')
@@ -41,7 +34,7 @@ function constructTranslate(x, y) {
 var wrap = d3.textwrap().method("tspans");
 
 
-d3.json(json_fname, function(error, data_total) {
+d3.json(json_endpoint, function(error, data_total) {
 	d3.select(window).on("resize", display)
 	data_total.forEach(function(d) {
 		d.lane = 0;

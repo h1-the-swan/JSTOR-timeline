@@ -660,10 +660,9 @@ timelineVis.timelineVis = (function() {
 				});
 
 			// initialize brush
-			var brushInit = [
-				// 1975, 1990
-				1970, 1970
-				];
+			var midpointYear = ( timeEnd - timeBegin ) / 2,
+				brushInit = [midpointYear, midpointYear];
+		
 			// brush.extent(brushInit);
 			mini.select(".brush").call(brush.extent(brushInit));
 
@@ -1256,6 +1255,25 @@ timelineVis.timelineVis = (function() {
 			changeExtent(initBrushRange[0], initBrushRange[0], 0);
 			// var initBrushPosition = +extentSelect.attr("x");
 			var initBrushPosition = x(brush.extent()[1]) + m[3];
+
+			// select a yearItem to expand for the demo
+			var visItems = yearItems.filter(function(d) {return d.year < initBrushRange[1] && d.year > initBrushRange[0];}),
+				numVisItems = visItems.size();
+			if (numVisItems === 0) {
+				// if there are no visible items in the range, just give up
+				return;
+			} else if (numVisItems === 1) {
+				// if there is only one visible item, use it
+				var selIndex = 0;
+			} else {
+				// else, use an item a little to the right of center
+				var selIndex = Math.ceil(numVisItems*.55);
+			};
+			var demoYearItem = visItems.filter(function(d, i) {
+									return i === selIndex;
+								});
+			
+
 			cursorIcon.transition().delay(transitionTimes[0])
 				.duration(transitionTimes[1])
 				.attr("transform", 
@@ -1293,7 +1311,6 @@ timelineVis.timelineVis = (function() {
 				// 	// .attr("transform", "translate(100,300)");
 				// 	.attr("transform", "translate(" + w + "," + mainHeight + ")");
 
-				var demoYearItem = d3.select($( '.yearItem' )[17]);
 				var demoYearMark = demoYearItem.select(".yearMark");
 				// console.log(demoYearItem);
 				// console.log(demoYearMark);

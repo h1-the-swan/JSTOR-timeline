@@ -1246,7 +1246,13 @@ timelineVis.timelineVis = (function() {
 			// d3.transition("initDemoTransition").delay(initDelay + initDuration)
 			// 	.each("end", demoExpand);
 			var extentSelect = mini.select(".brush").select(".extent");
-			var initBrushRange = [1970, 2000];
+			// var initBrushRange = [1970, 2000];
+			var yearRange = timeEnd - timeBegin;
+			if (yearRange < 6) {
+				var initBrushRange = [timeBegin, timeEnd];
+			} else {
+				var initBrushRange = [timeBegin + Math.floor(yearRange*.3), timeEnd - Math.floor(yearRange*.2)];
+			}
 			changeExtent(initBrushRange[0], initBrushRange[0], 0);
 			// var initBrushPosition = +extentSelect.attr("x");
 			var initBrushPosition = x(brush.extent()[1]) + m[3];

@@ -33,6 +33,9 @@ timelineVis.timelineVis = (function() {
 		data_total = config.parseData(data_total);
 		data_total.forEach(function(d) {
 			d.lane = 0;
+			if (d.eigenfactor === null) {
+				d.eigenfactor = 0;
+			}
 		});
 		var markType = getParameterByName('m');
 		if ( (markType != 'icon') && (markType != 'circle') ) {
@@ -69,7 +72,10 @@ timelineVis.timelineVis = (function() {
 			var miniHeight = laneLength * 12 + 30,
 				mainHeight = h - miniHeight - 50;
 
-			var mainMinRad = 10;
+			var mainMinRad = 8,
+				mainMaxRad = 18,
+				miniMinRad = 5,
+				miniMaxRad = 10;
 
 			var minExtent, maxExtent;  // these will be the lower and upper years displayed in main
 
@@ -92,12 +98,19 @@ timelineVis.timelineVis = (function() {
 			var y2 = d3.scale.linear()
 					.domain([0, laneLength])
 					.range([0, miniHeight]);
-			var efScale = d3.scale.linear()
-					.domain(d3.extent(data_total, function(d) { return d.eigenfactor; }))
-					.range([0, 5]);
+			var efExtent = d3.extent(data_total, function(d) { return d.eigenfactor; });
+			var efScaleMini = d3.scale.linear()
+					.domain(efExtent)
+					// .range([0, 5]);
+					.range([miniMinRad, miniMaxRad]);
+			var efScaleMain = d3.scale.linear()
+					.domain(efExtent)
+					// .range([0, 5]);
+					.range([mainMinRad, mainMaxRad]);
 			var efSumScale = d3.scale.linear()
 					.domain(d3.extent(dataByYear, function(d) { return d.sum_eigenfactor; }))
-					.range([0, 5]);
+					// .range([0, 5]);
+					.range([mainMinRad, mainMaxRad]);
 
 			var chartWidth = w + m[1] + m[3],
 				chartHeight = h + m[0] + m[2];
@@ -261,7 +274,7 @@ timelineVis.timelineVis = (function() {
 					// d.y = 0;  // for now
 					d.y = miniHeight / 2;
 					// d.radius = 5 + efScale(d.eigenfactor_score);
-					d.radius = 1 + ( efScale(d.eigenfactor) );
+					d.radius = 1 + ( efScaleMini(d.eigenfactor) );
 					return "translate(" + d.x + "," + d.y + ")";
 				});
 
@@ -308,7 +321,8 @@ timelineVis.timelineVis = (function() {
 						.attr("transform", function(d) {
 							d.x = 0;  //for now
 							d.y = 0;  //for now
-							d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
+							// d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
+							d.radius = efSumScale(d.sum_eigenfactor);
 							// d.radius = mainMinRad + (d.values.length*2);
 							return "translate(" + d.x + "," + d.y + ")";
 						});
@@ -341,7 +355,8 @@ timelineVis.timelineVis = (function() {
 							d.x = 0;  //for now
 							d.y = 0;  //for now
 							d.idx = i;
-							d.radius = mainMinRad + (2 * efScale(d.eigenfactor));
+							// d.radius = mainMinRad + (2 * efScale(d.eigenfactor));
+							d.radius = efScaleMain(d.eigenfactor);
 							return "translate(" + d.x + "," + d.y + ")";
 						})
 						.attr("title", function(d) {
@@ -388,7 +403,8 @@ timelineVis.timelineVis = (function() {
 						.attr("transform", function(d) {
 							d.x = 0;  //for now
 							d.y = 0;  //for now
-							d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
+							// d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
+							d.radius = efSumScale(d.sum_eigenfactor);
 							return "translate(" + d.x + "," + d.y + ")";
 						});
 					var paperItems = yearItems.append("g").selectAll(".paperItem")
@@ -399,7 +415,8 @@ timelineVis.timelineVis = (function() {
 							d.x = 0;  //for now
 							d.y = 0;  //for now
 							d.idx = i;
-							d.radius = mainMinRad + (2 * efScale(d.eigenfactor));
+							// d.radius = mainMinRad + (2 * efScale(d.eigenfactor));
+							d.radius = efScaleMain(d.eigenfactor);
 							return "translate(" + d.x + "," + d.y + ")";
 						});
 

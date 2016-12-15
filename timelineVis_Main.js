@@ -1188,6 +1188,7 @@ timelineVis.timelineVis = (function() {
 				var words = d.title.split(" ");
 				var giveUpThreshold = 20;
 				var i = 0;
+				var viewLeftEdge = $( '#timeline svg' ).position().left + m[3];
 				while (true) {
 					i++;
 					if (i>giveUpThreshold) {
@@ -1195,7 +1196,8 @@ timelineVis.timelineVis = (function() {
 					}
 					var leftPos = $( this ).position().left;
 					// if (leftPos < 20) {
-					if (leftPos < m[3]) {
+					// if (leftPos < m[3]) {
+					if (leftPos < viewLeftEdge) {
 						var numWords = words.length;
 						words = words.slice(0, numWords-2);
 						var shortenedTitle = words.join(" ")+"...";

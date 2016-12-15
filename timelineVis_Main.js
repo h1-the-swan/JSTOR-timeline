@@ -1223,7 +1223,15 @@ timelineVis.timelineVis = (function() {
 		}
 		
 		function demoInit() {
+			chart.classed("demoInProgress", true);
 			clearBrush();
+			contract();
+			disableInteraction();
+			mini.on("mousedown", demoQuit);
+			function demoQuit() {
+				chart.classed("demoInProgress", false);
+				cursorIcon.transition(0).remove();
+			}
 			var transitionTimes = [
 					750,  // 0: initial delay before anything happens
 					1000,  // 1: time to move the cursor to the mini area
@@ -1274,6 +1282,11 @@ timelineVis.timelineVis = (function() {
 			var demoYearItem = visItems.filter(function(d, i) {
 									return i === selIndex;
 								});
+
+			if (!chart.classed("demoInProgress")) {
+				// quit
+				return;
+			}
 			
 
 			cursorIcon.transition().delay(transitionTimes[0])
@@ -1283,7 +1296,11 @@ timelineVis.timelineVis = (function() {
 						constructTranslate(initBrushPosition, mainHeight+m[0]+(miniHeight/2))
 						)
 				.each("end", function() {
-					demoDrawBrush();
+					if (chart.classed("demoInProgress")) {
+						demoDrawBrush();
+					} else {
+						demoEnd(0);
+					}
 				});
 
 			function demoDrawBrush() {
@@ -1297,7 +1314,13 @@ timelineVis.timelineVis = (function() {
 						var xPos = x(brush.extent()[1]) + m[3];
 						return constructTranslate(xPos, mainHeight+m[0]+(miniHeight/2));
 					})
-				.each("end", demoExpand);
+				.each("end", function() {
+					if (chart.classed("demoInProgress")) {
+						demoExpand();
+					} else {
+						demoEnd(0);
+					}
+				});
 			}
 			
 			function demoExpand() {
@@ -1328,9 +1351,13 @@ timelineVis.timelineVis = (function() {
 					.duration(transitionTimes[4])
 					.attr("transform", translate)
 					.each("end", function() {
-						var sel = paperItems.filter(function(dd) {return dd.year==demoYearItem[0][0].__data__.year});
-						expand(sel);
-						demoEnd();
+						if (chart.classed("demoInProgress")) {
+							var sel = paperItems.filter(function(dd) {return dd.year==demoYearItem[0][0].__data__.year});
+							expand(sel);
+							demoEnd(transitionTimes[5]);
+						} else {
+							demoEnd(0);
+						}
 					});
 				// cursorIcon.transition("demoEnd").delay(demoTransitionTime)
 				// 	.duration(demoDelayToRemove)
@@ -1340,12 +1367,15 @@ timelineVis.timelineVis = (function() {
 				// 	});
 			}
 
-			function demoEnd() {
+			function demoEnd(delay) {
 				cursorIcon.transition("demoEnd")
-					.delay(transitionTimes[5])
+					.delay(delay)
 					.duration(0)
 					.remove()
-					.each("end", contract);
+					.each("end", function() {
+						contract();
+						enableInteraction();
+					});
 				
 			}
 		}
@@ -1387,6 +1417,14 @@ timelineVis.timelineVis = (function() {
 								// minimizeTimeline();
 								demoInit();
 							});
+
+		function disableInteraction() {
+			d3.select("#timeline svg").style("pointer-events", "none");
+		}
+
+		function enableInteraction() {
+			d3.select("#timeline svg").style("pointer-events", null);
+		}
 
 		$( document ).on("timelineVis:contract", function() {
 			contract();

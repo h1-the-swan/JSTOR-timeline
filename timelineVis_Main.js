@@ -1410,13 +1410,15 @@ timelineVis.timelineVis = (function() {
 			// console.log(d3.select("#clip").attr("height"));
 		}
 
-		var testButton = d3.select("body").append("button")
-							.attr("id", "testButton")
-							.html("testButton")
-							.on("click", function() {
-								// minimizeTimeline();
-								demoInit();
-							});
+		// var testButton = d3.select("body").append("button")
+		// 					.attr("id", "testButton")
+		// 					.html("testButton")
+		// 					.on("click", function() {
+		// 						// minimizeTimeline();
+		// 						demoInit();
+		// 					});
+		d3.select(".clickForDemo")
+			.on("click", demoInit);
 
 		function disableInteraction() {
 			d3.select("#timeline svg").style("pointer-events", "none");

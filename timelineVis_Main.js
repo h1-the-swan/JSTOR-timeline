@@ -545,6 +545,13 @@ timelineVis.timelineVis = (function() {
 
 			var scrollDur = 150;
 			function moveBrush(direction) {
+				// if (brush.empty() || minExtent<timeBegin || maxExtent>timeEnd) {
+				if (brush.empty()) {
+					minExtent = (timeEnd + timeBegin) / 2;
+					maxExtent = ( (timeEnd + timeBegin) / 2 ) + 1;
+					changeExtent(minExtent, maxExtent, 0);
+					return;
+				}
 				switch (direction) {
 					case 'left':
 						changeExtent(Math.round(minExtent-1), Math.round(maxExtent-1), scrollDur, "linear");
@@ -660,7 +667,7 @@ timelineVis.timelineVis = (function() {
 				});
 
 			// initialize brush
-			var midpointYear = ( timeEnd - timeBegin ) / 2,
+			var midpointYear = ( timeEnd + timeBegin ) / 2,
 				brushInit = [midpointYear, midpointYear];
 		
 			// brush.extent(brushInit);
@@ -1439,6 +1446,7 @@ timelineVis.timelineVis = (function() {
 		$( document ).on("timelineVis:clearBrush", function() {
 			clearBrush();
 		});
+
 	});
 
 

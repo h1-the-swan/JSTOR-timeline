@@ -57,6 +57,7 @@ timelineVis.timelineVis = (function() {
 			d.lane = 0;
 			d.year = +d.key;
 		});
+		var maxDataByYear = d3.max(dataByYear, function(d) { return d.values.length; });
 
 		var lanes = ["Climate change"],
 					laneLength = lanes.length,
@@ -64,759 +65,762 @@ timelineVis.timelineVis = (function() {
 				timeBegin = +d3.min(dataByYear, function(d) { return d.year; }) - 1,
 				timeEnd = +d3.max(dataByYear, function(d) { return d.year; }) + 1;
 
-			var m = [20, 15, 15, 150]; //top right bottom left
-				// w = 960 - m[1] - m[3],
-				// h = 350 - m[0] - m[2],
-			w = w - m[1] - m[3];
-			h = h - m[0] - m[2];
-			var miniHeight = laneLength * 12 + 30,
-				mainHeight = h - miniHeight - 50;
+		var m = [20, 15, 15, 150]; //top right bottom left
+			// w = 960 - m[1] - m[3],
+			// h = 350 - m[0] - m[2],
+		w = w - m[1] - m[3];
+		h = h - m[0] - m[2];
+		var miniHeight = laneLength * 12 + 30,
+			mainHeight = h - miniHeight - 50;
 
-			var mainMinRad = 8,
-				mainMaxRad = 18,
-				miniMinRad = 5,
-				miniMaxRad = 10;
+		var mainMinRad = 8,
+			mainMaxRad = 18,
+			miniMinRad = 5,
+			miniMaxRad = 10;
 
-			var minExtent, maxExtent;  // these will be the lower and upper years displayed in main
+		var minExtent, maxExtent;  // these will be the lower and upper years displayed in main
 
-			var stylesBase = {
-				'opacity': .2
-			};
-			var stylesVisible = {
-				'opacity': 1
-			};
+		var stylesBase = {
+			'opacity': .2
+		};
+		var stylesVisible = {
+			'opacity': 1
+		};
 
-			//scales
-			var x = d3.scale.linear()
-					.domain([timeBegin, timeEnd])
-					.range([0, w]);
-			var x1 = d3.scale.linear()
-					.range([0, w]);
-			var y1 = d3.scale.linear()
-					.domain([0, laneLength])
-					.range([0, mainHeight]);
-			var y2 = d3.scale.linear()
-					.domain([0, laneLength])
-					.range([0, miniHeight]);
-			var efExtent = d3.extent(data_total, function(d) { return d.eigenfactor; });
-			var efScaleMini = d3.scale.linear()
-					.domain(efExtent)
-					// .range([0, 5]);
-					.range([miniMinRad, miniMaxRad]);
-			var efScaleMain = d3.scale.linear()
-					.domain(efExtent)
-					// .range([0, 5]);
-					.range([mainMinRad, mainMaxRad]);
-			var efSumScale = d3.scale.linear()
-					.domain(d3.extent(dataByYear, function(d) { return d.sum_eigenfactor; }))
-					// .range([0, 5]);
-					.range([mainMinRad, mainMaxRad]);
+		//scales
+		var x = d3.scale.linear()
+				.domain([timeBegin, timeEnd])
+				.range([0, w]);
+		var x1 = d3.scale.linear()
+				.range([0, w]);
+		var y1 = d3.scale.linear()
+				.domain([0, laneLength])
+				.range([0, mainHeight]);
+		var y2 = d3.scale.linear()
+				.domain([0, laneLength])
+				.range([0, miniHeight]);
+		var efExtent = d3.extent(data_total, function(d) { return d.eigenfactor; });
+		var efScaleMini = d3.scale.linear()
+				.domain(efExtent)
+				// .range([0, 5]);
+				.range([miniMinRad, miniMaxRad]);
+		var efScaleMain = d3.scale.linear()
+				.domain(efExtent)
+				// .range([0, 5]);
+				.range([mainMinRad, mainMaxRad]);
+		var efSumScale = d3.scale.linear()
+				.domain(d3.extent(dataByYear, function(d) { return d.sum_eigenfactor; }))
+				// .range([0, 5]);
+				.range([mainMinRad, mainMaxRad]);
 
-			var chartWidth = w + m[1] + m[3],
-				chartHeight = h + m[0] + m[2];
 
-			var chart = d3.select("#timeline")
-						.append("svg")
-						// .attr("width", chartWidth)
-						// .attr("height", chartHeight)
-						.attr("data-maximizedHeight", chartHeight)
-						.attr("data-currHeight", chartHeight)
-						.attr("viewBox", "0 0 " + chartWidth + " " + chartHeight)
-						.attr("preserveAspectRatio", "xMidYMid meet")
-						.attr("class", "chart");
-			
-			chart.append("defs").append("clipPath")
-				.attr("id", "clip")
-				.append("rect")
-				.attr("width", w)
-				.attr("height", mainHeight);
+		var chartWidth = w + m[1] + m[3],
+			chartHeight = h + m[0] + m[2];
 
-			var mainContainer = chart.append("g")
-						.attr("transform", "translate(0," + m[0] + ")")
-						.attr("width", chartWidth)
-						.attr("height", mainHeight)
-						.attr("class", "mainContainer");
-
-			// var main = chart.append("g")
-			var main = mainContainer.append("g")
-						// .attr("transform", "translate(" + m[3] + "," + m[0] + ")")
-						.attr("transform", "translate(" + m[3] + ",0)")
-						.attr("width", w)
-						.attr("height", mainHeight)
-						.attr("class", "main");
-
-			var miniContainer = chart.append("g")
-						.attr("transform", "translate(0," + (mainHeight + m[0]) + ")")
-						.attr("width", chartWidth)
-						.attr("height", mainHeight)
-						.attr("class", "miniContainer");
-
-			// var mini = chart.append("g")
-			var mini = miniContainer.append("g")
-						// .attr("transform", "translate(" + m[3] + "," + (mainHeight + m[0]) + ")")
-						.attr("transform", "translate(" + m[3] + ",0)")
-						.attr("width", w)
-						.attr("height", miniHeight)
-						.attr("class", "mini");
-			
-			//main lanes and texts
-			var mainLaneLinesG = main.append("g");
-			for (var i = 0, len = lanes.length; i < len; i++) {
-				mainLaneLinesG.append("line")
-					.attr("x1", m[1])
-					.attr("y1", function() {return y2(i);})
-					.attr("x2", w)
-					.attr("y2", function() {return y2(i);})
-					.attr("class", "laneLine")
-					.attr("stroke", "lightgray");
-			}
-
-			var mainLabelG = mainContainer.append("g")
-				.attr("transform", "translate(0,"+(m[0])+")");
-			var mainLabel = mainLabelG.append("text")
-				.text("Number of influential articles in the year")
-				// .attr("x", -m[1])
-				// .attr("x", 0)
-				// .attr("y", 10)
-				.style("font-size", "14px")
-				// .attr("text-anchor", "end")
-				.attr("class", "laneText")
-				.attr("id", "mainLabel");
+		var chart = d3.select("#timeline")
+					.append("svg")
+					// .attr("width", chartWidth)
+					// .attr("height", chartHeight)
+					.attr("data-maximizedHeight", chartHeight)
+					.attr("data-currHeight", chartHeight)
+					.attr("viewBox", "0 0 " + chartWidth + " " + chartHeight)
+					.attr("preserveAspectRatio", "xMidYMid meet")
+					.attr("class", "chart");
 		
-			// wrap.bounds({height: mainHeight, width: m[3]}).method("tspans");
-			wrap.bounds({height: mainHeight, width: (m[3] * .9)});
-			// d3.select(".laneText").call(wrap);
-			mainLabel.call(wrap);
+		chart.append("defs").append("clipPath")
+			.attr("id", "clip")
+			.append("rect")
+			.attr("width", w)
+			.attr("height", mainHeight);
 
-			var subOffset = $( '#mainLabel' ).height();  // y offset for the sub label
-			var mainLabelSub = mainLabelG.append("text")
-				.attr("transform", "translate(0," + subOffset + ")")
-				.text("Size of circles indicates level of influence")
-				.style("font-size", "11px")
-				.attr("class", "laneText")
-				.attr("id", "mainLabelSub");
+		var mainContainer = chart.append("g")
+					.attr("transform", "translate(0," + m[0] + ")")
+					.attr("width", chartWidth)
+					.attr("height", mainHeight)
+					.attr("class", "mainContainer");
 
-			wrap.bounds({height: mainHeight - subOffset, width: (m[3] * .9)});
-			mainLabelSub.call(wrap);
-			
-			
-			//mini lanes and texts
-			var miniLaneLinesG = mini.append("g");
-			for (var i = 0, len = lanes.length; i < len; i++) {
-				miniLaneLinesG.append("line")
-					.attr("x1", m[1])
-					.attr("y1", function() {return y2(i);})
-					.attr("x2", w)
-					.attr("y2", function() {return y2(i);})
-					.attr("class", "laneLine")
-					.attr("stroke", "lightgray");
-			}
+		// var main = chart.append("g")
+		var main = mainContainer.append("g")
+					// .attr("transform", "translate(" + m[3] + "," + m[0] + ")")
+					.attr("transform", "translate(" + m[3] + ",0)")
+					.attr("width", w)
+					.attr("height", mainHeight)
+					.attr("class", "main");
 
-			var miniLabel = miniContainer.append("g")
-				.attr("transform", "translate(0,"+ m[0] +")")
-				.append("text")
-				.text("Select date range to focus on:")
-				// .attr("x", -m[1])
-				// .attr("x", 0)
-				// .attr("y", 10)
-				.style("font-size", "14px")
-				// .attr("text-anchor", "end")
-				.attr("class", "laneText");
+		var miniContainer = chart.append("g")
+					.attr("transform", "translate(0," + (mainHeight + m[0]) + ")")
+					.attr("width", chartWidth)
+					.attr("height", mainHeight)
+					.attr("class", "miniContainer");
 
-			wrap.bounds({height: miniHeight, width: (m[3] * .9)});
-			// d3.select(".laneText").call(wrap);
-			miniLabel.call(wrap);
+		// var mini = chart.append("g")
+		var mini = miniContainer.append("g")
+					// .attr("transform", "translate(" + m[3] + "," + (mainHeight + m[0]) + ")")
+					.attr("transform", "translate(" + m[3] + ",0)")
+					.attr("width", w)
+					.attr("height", miniHeight)
+					.attr("class", "mini");
+		
+		//main lanes and texts
+		var mainLaneLinesG = main.append("g");
+		for (var i = 0, len = lanes.length; i < len; i++) {
+			mainLaneLinesG.append("line")
+				.attr("x1", m[1])
+				.attr("y1", function() {return y2(i);})
+				.attr("x2", w)
+				.attr("y2", function() {return y2(i);})
+				.attr("class", "laneLine")
+				.attr("stroke", "lightgray");
+		}
 
-			// mini.append("g").selectAll(".laneText")
-			// 	.data(lanes)
-			// 	.enter().append("text")
-			// 	.text(function(d) {return d;})
-			// 	.attr("x", -m[1])
-			// 	.attr("y", function(d, i) {return y2(i + .5);})
-			// 	.attr("dy", ".5ex")
-			// 	.attr("text-anchor", "end")
-			// 	.attr("class", "laneText");
+		var mainLabelG = mainContainer.append("g")
+			.attr("transform", "translate(0,"+(m[0])+")");
+		var mainLabel = mainLabelG.append("text")
+			.text("Number of influential articles in the year")
+			// .attr("x", -m[1])
+			// .attr("x", 0)
+			// .attr("y", 10)
+			.style("font-size", "14px")
+			// .attr("text-anchor", "end")
+			.attr("class", "laneText")
+			.attr("id", "mainLabel");
+	
+		// wrap.bounds({height: mainHeight, width: m[3]}).method("tspans");
+		wrap.bounds({height: mainHeight, width: (m[3] * .9)});
+		// d3.select(".laneText").call(wrap);
+		mainLabel.call(wrap);
 
-			// Axes
-			var xAxisMini = d3.svg.axis()
-				.orient("bottom")
-				// .ticks(5)
-				.scale(x)
-				.tickFormat(d3.format("d"));
+		var subOffset = $( '#mainLabel' ).height();  // y offset for the sub label
+		var mainLabelSub = mainLabelG.append("text")
+			.attr("transform", "translate(0," + subOffset + ")")
+			.text("Size of circles indicates level of influence")
+			.style("font-size", "11px")
+			.attr("class", "laneText")
+			.attr("id", "mainLabelSub");
 
-			mini.append("g")
-				.attr("class", "xaxis")
-				.attr("transform", "translate(0," + (miniHeight) + ")")
-				.call(xAxisMini);
+		wrap.bounds({height: mainHeight - subOffset, width: (m[3] * .9)});
+		mainLabelSub.call(wrap);
+		
+		
+		//mini lanes and texts
+		var miniLaneLinesG = mini.append("g");
+		for (var i = 0, len = lanes.length; i < len; i++) {
+			miniLaneLinesG.append("line")
+				.attr("x1", m[1])
+				.attr("y1", function() {return y2(i);})
+				.attr("x2", w)
+				.attr("y2", function() {return y2(i);})
+				.attr("class", "laneLine")
+				.attr("stroke", "lightgray");
+		}
 
-			var xAxisMain = d3.svg.axis()
-				.orient("top")
-				.scale(x1)
-				.tickFormat(d3.format("d"));
+		var miniLabel = miniContainer.append("g")
+			.attr("transform", "translate(0,"+ m[0] +")")
+			.append("text")
+			.text("Select date range to focus on:")
+			// .attr("x", -m[1])
+			// .attr("x", 0)
+			// .attr("y", 10)
+			.style("font-size", "14px")
+			// .attr("text-anchor", "end")
+			.attr("class", "laneText");
 
-			var xAxisMainObj = main.append("g")
-				.attr("class", "xaxis")
-				.call(xAxisMain);
+		wrap.bounds({height: miniHeight, width: (m[3] * .9)});
+		// d3.select(".laneText").call(wrap);
+		miniLabel.call(wrap);
 
-			var mainClipPath = main.append("g")
-								.attr("class", "mainClipPath")
-								.attr("clip-path", "url(#clip)");
+		// mini.append("g").selectAll(".laneText")
+		// 	.data(lanes)
+		// 	.enter().append("text")
+		// 	.text(function(d) {return d;})
+		// 	.attr("x", -m[1])
+		// 	.attr("y", function(d, i) {return y2(i + .5);})
+		// 	.attr("dy", ".5ex")
+		// 	.attr("text-anchor", "end")
+		// 	.attr("class", "laneText");
 
-			
-			//mini items
-			// note: mouseover events will not play well with the brush
-			var miniItems = mini.append("g").selectAll(".miniItem")
-				.data(data_total)
-				.enter().append("g")
-				.attr("class", "miniItem")
-				.attr("transform", function(d) {
-					d.x = x(d.year);
-					// d.y = 0;  // for now
-					d.y = miniHeight / 2;
-					// d.radius = 5 + efScale(d.eigenfactor_score);
-					d.radius = 1 + ( efScaleMini(d.eigenfactor) );
-					return "translate(" + d.x + "," + d.y + ")";
-				});
+		// Axes
+		var xAxisMini = d3.svg.axis()
+			.orient("bottom")
+			// .ticks(5)
+			.scale(x)
+			.tickFormat(d3.format("d"));
 
-			// not currently using this
-			function stackItems(items, scale) {
-				var yearsList = [];
-				items.each(function(d) {
-					if ( !(d.year in yearsList) ) {
-						yearsList.push(d.year);
-					}
-				});
-				var maxRad = d3.max(items[0], function(d) {return d.__data__.radius});
-				for (var i = 0, len = yearsList.length; i < len; i++) {
-					thisYearMini = items.filter(function(d) {return d.year==yearsList[i]});
-					var y = 0;
-					thisYearMini.each(function(d) {
-						if (y == 0) {
-							y = scale(d.lane) + maxRad;
-						} else {
-							y = y + 2*d.radius;
-						}
-						d.y = y;
-						d3.select(this).attr("transform", function(d) {
-							return "translate(" + d.x + "," + d.y + ")";
-						});
-					});
+		mini.append("g")
+			.attr("class", "xaxis")
+			.attr("transform", "translate(0," + (miniHeight) + ")")
+			.call(xAxisMini);
+
+		var xAxisMain = d3.svg.axis()
+			.orient("top")
+			.scale(x1)
+			.tickFormat(d3.format("d"));
+
+		var xAxisMainObj = main.append("g")
+			.attr("class", "xaxis")
+			.call(xAxisMain);
+
+		var mainClipPath = main.append("g")
+							.attr("class", "mainClipPath")
+							.attr("clip-path", "url(#clip)");
+
+		
+		//mini items
+		// note: mouseover events will not play well with the brush
+		var miniItems = mini.append("g").selectAll(".miniItem")
+			.data(data_total)
+			.enter().append("g")
+			.attr("class", "miniItem")
+			.attr("transform", function(d) {
+				d.x = x(d.year);
+				// d.y = 0;  // for now
+				d.y = miniHeight / 2;
+				// d.radius = 5 + efScale(d.eigenfactor_score);
+				d.radius = 1 + ( efScaleMini(d.eigenfactor) );
+				return "translate(" + d.x + "," + d.y + ")";
+			});
+
+		// not currently using this
+		function stackItems(items, scale) {
+			var yearsList = [];
+			items.each(function(d) {
+				if ( !(d.year in yearsList) ) {
+					yearsList.push(d.year);
 				}
+			});
+			var maxRad = d3.max(items[0], function(d) {return d.__data__.radius});
+			for (var i = 0, len = yearsList.length; i < len; i++) {
+				thisYearMini = items.filter(function(d) {return d.year==yearsList[i]});
+				var y = 0;
+				thisYearMini.each(function(d) {
+					if (y == 0) {
+						y = scale(d.lane) + maxRad;
+					} else {
+						y = y + 2*d.radius;
+					}
+					d.y = y;
+					d3.select(this).attr("transform", function(d) {
+						return "translate(" + d.x + "," + d.y + ")";
+					});
+				});
 			}
-			// stackItems(miniItems, y2);
+		}
+		// stackItems(miniItems, y2);
 
-			var miniMarks = miniItems.append("circle")
-				.attr("class", "miniMark")
-				.attr("r", function(d) {return d.radius;})
-				.style(stylesBase);
+		var miniMarkOpacity = Math.max( (1/maxDataByYear), 0.3 );
+		var miniMarks = miniItems.append("circle")
+			.attr("class", "miniMark")
+			.attr("r", function(d) {return d.radius;})
+			// .style(stylesBase);
+			.style("opacity", miniMarkOpacity);
 
 
-			switch (markType) {
-				case 'circle':
-					//main items
-					var yearItems = mainClipPath.append("g").selectAll(".yearItem")
-						.data(dataByYear)
-						.enter().append("g")
-						.attr("class", "yearItem")
-						.attr("transform", function(d) {
-							d.x = 0;  //for now
-							d.y = 0;  //for now
-							// d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
-							d.radius = efSumScale(d.sum_eigenfactor);
-							// d.radius = mainMinRad + (d.values.length*2);
-							return "translate(" + d.x + "," + d.y + ")";
-						});
+		switch (markType) {
+			case 'circle':
+				//main items
+				var yearItems = mainClipPath.append("g").selectAll(".yearItem")
+					.data(dataByYear)
+					.enter().append("g")
+					.attr("class", "yearItem")
+					.attr("transform", function(d) {
+						d.x = 0;  //for now
+						d.y = 0;  //for now
+						// d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
+						d.radius = efSumScale(d.sum_eigenfactor);
+						// d.radius = mainMinRad + (d.values.length*2);
+						return "translate(" + d.x + "," + d.y + ")";
+					});
 
-					var yearMarks = yearItems.append("circle")
-						.attr("class", "yearMark")
-						// .on('mouseover', expand)
-						.on('mouseover', function(d) {
-							contract();
-							var sel = paperItems.filter(function(dd) {return dd.year===d.year});
-							var thisYearItem = d3.select(this);
-							expand(sel, thisYearItem);
-							})
-						// .on('mouseout', contract)
-						.style(stylesVisible);
-						
-					//label for number of papers
-					yearItems.append("text")
-						.attr("text-anchor", "middle")
-						.attr("y", ".3em")  //nudge
-						.attr("class", "numIndicator")
-						.text(function(d) {return d.values.length;});
-
-					var paperItems = yearItems.append("g").selectAll(".paperItem")
-						.data(function(d) {return d.values})
-						.enter().append("g")
-						.attr("class", "paperItem")
-						.attr("data-year", function(d) {return d.year;})
-						.attr("transform", function(d, i) {
-							d.x = 0;  //for now
-							d.y = 0;  //for now
-							d.idx = i;
-							// d.radius = mainMinRad + (2 * efScale(d.eigenfactor));
-							d.radius = efScaleMain(d.eigenfactor);
-							return "translate(" + d.x + "," + d.y + ")";
+				var yearMarks = yearItems.append("circle")
+					.attr("class", "yearMark")
+					// .on('mouseover', expand)
+					.on('mouseover', function(d) {
+						contract();
+						var sel = paperItems.filter(function(dd) {return dd.year===d.year});
+						var thisYearItem = d3.select(this);
+						expand(sel, thisYearItem);
 						})
-						.attr("title", function(d) {
-								// for tooltip
-								// var text = d.title
-								// 			+ ", "
-								// 			+ d.authors.join(", ")
-								// 			+ ", "
-								// 			+ d.journal
-								// 			+ ", "
-								// 			+ d.year;
-								// return text;
-							var span = $( '<span>' );
-							span.append( $( '<p class="tooltip title">' ).text(d.title) ); 
-							span.append( $( '<p class="tooltip authors">' ).text(d.authors.join(", ")) );
-							span.append( $( '<p class="tooltip journal">' ).text(d.venue) ); 
-							span.append( $( '<p class="tooltip year">' ).text(d.year) ); 
-							return span.html();
+					// .on('mouseout', contract)
+					.style(stylesVisible);
+					
+				//label for number of papers
+				yearItems.append("text")
+					.attr("text-anchor", "middle")
+					.attr("y", ".3em")  //nudge
+					.attr("class", "numIndicator")
+					.text(function(d) {return d.values.length;});
 
-							})
-						.on("mouseover", function(d) {
-								// var t = d3.select(this).select('.paperLabel');
-								// console.log(this.getBoundingClientRect());
-								// console.log($( this ).position());
-								// console.log($( '.main' ).position().top + mainHeight);
-							})
-						.on("click", function(d) {
-							var url = d.url;
-							// window.open(url,'_blank');
+				var paperItems = yearItems.append("g").selectAll(".paperItem")
+					.data(function(d) {return d.values})
+					.enter().append("g")
+					.attr("class", "paperItem")
+					.attr("data-year", function(d) {return d.year;})
+					.attr("transform", function(d, i) {
+						d.x = 0;  //for now
+						d.y = 0;  //for now
+						d.idx = i;
+						// d.radius = mainMinRad + (2 * efScale(d.eigenfactor));
+						d.radius = efScaleMain(d.eigenfactor);
+						return "translate(" + d.x + "," + d.y + ")";
+					})
+					.attr("title", function(d) {
+							// for tooltip
+							// var text = d.title
+							// 			+ ", "
+							// 			+ d.authors.join(", ")
+							// 			+ ", "
+							// 			+ d.journal
+							// 			+ ", "
+							// 			+ d.year;
+							// return text;
+						var span = $( '<span>' );
+						span.append( $( '<p class="tooltip title">' ).text(d.title) ); 
+						span.append( $( '<p class="tooltip authors">' ).text(d.authors.join(", ")) );
+						span.append( $( '<p class="tooltip journal">' ).text(d.venue) ); 
+						span.append( $( '<p class="tooltip year">' ).text(d.year) ); 
+						return span.html();
+
+						})
+					.on("mouseover", function(d) {
+							// var t = d3.select(this).select('.paperLabel');
+							// console.log(this.getBoundingClientRect());
+							// console.log($( this ).position());
+							// console.log($( '.main' ).position().top + mainHeight);
+						})
+					.on("click", function(d) {
+						var url = d.url;
+						// window.open(url,'_blank');
+					});
+
+				var paperMarks = paperItems.append("circle")
+					.attr("r", 0)  //for now
+					.attr("class", "paperMark");
+
+				break;
+			
+			case 'icon':
+				//main items
+				var yearItems = mainClipPath.append("g").selectAll(".yearItem")
+					.data(dataByYear)
+					.enter().append("g")
+					.attr("class", "yearItem")
+					.attr("transform", function(d) {
+						d.x = 0;  //for now
+						d.y = 0;  //for now
+						// d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
+						d.radius = efSumScale(d.sum_eigenfactor);
+						return "translate(" + d.x + "," + d.y + ")";
+					});
+				var paperItems = yearItems.append("g").selectAll(".paperItem")
+					.data(function(d) {return d.values})
+					.enter().append("g")
+					.attr("class", "paperItem")
+					.attr("transform", function(d, i) {
+						d.x = 0;  //for now
+						d.y = 0;  //for now
+						d.idx = i;
+						// d.radius = mainMinRad + (2 * efScale(d.eigenfactor));
+						d.radius = efScaleMain(d.eigenfactor);
+						return "translate(" + d.x + "," + d.y + ")";
+					});
+
+
+				var paperMarks = paperItems.append("text")
+					.attr("class", "paperMark")
+					.style("font-family", "FontAwesome")
+					.text("\uf0f6")
+					// .on('mouseover', expand)
+					.attr("text-anchor", "middle")
+					.on('mouseover', function(d) {
+						contract();
+						var sel = paperItems.filter(function(dd) {return dd.year===d.year});
+						expand(sel);
 						});
+					// .on('mouseout', contract)
 
-					var paperMarks = paperItems.append("circle")
-						.attr("r", 0)  //for now
-						.attr("class", "paperMark");
+				var bbox = paperMarks.node().getBBox();
+				paperItems.insert("rect", ".paperMark")
+					.attr("x", bbox.x)
+					.attr("y", bbox.y)
+					.attr("width", bbox.width)
+					.attr("height", bbox.height)
+					.style("fill", "white");
 
-					break;
+				// //main items
+				// var paperItems = mainClipPath.append("g").selectAll(".paperItem")
+				// 	.data(data_total)
+				// 	.enter().append("g")
+				// 	.attr("class", "paperItem")
+				// 	.attr("transform", function(d) {
+				// 		d.x = 0;  //for now
+				// 		d.y = 0;  //for now
+				// 		d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
+				// 		return "translate(" + d.x + "," + d.y + ")";
+				// 	});
+				// var paperMarks = paperItems.append("text")
+				// 	.attr("class", "paperMark")
+				// 	.style("font-family", "FontAwesome")
+				// 	.text("\uf0f6")
+				// 	// .on('mouseover', expand)
+				// 	.on('mouseover', function(d) {
+				// 		contract();
+				// 		var sel = paperItems.filter(function(dd) {return dd.year===d.year});
+				// 		expand(sel);
+				// 		});
+				// 	// .on('mouseout', contract)
+
+				// var yearItems = mainClipPath.append("g").selectAll(".yearItem")
+				// 	.data(dataByYear)
+				// 	.enter().append("g")
+				// 	.attr("class", "yearItem")
+				// 	.attr("transform", function(d) {
+				// 		d.x = 0;  //for now
+				// 		d.y = 0;  //for now
+				// 		d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
+				// 		return "translate(" + d.x + "," + d.y + ")";
+				// 	});
+				// var yearMarks = yearItems.append("text")
+				// 	.attr("class", "yearMark")
+				// 	.style("font-family", "FontAwesome")
+				// 	.text("\uf0f6")
+				// 	// .on('mouseover', expand)
+				// 	.on('mouseover', function(d) {
+				// 		contract();
+				// 		var sel = paperItems.filter(function(dd) {return dd.year===d.year});
+				// 		expand(sel);
+				// 		});
+				// 	// .on('mouseout', contract)
+
+				break;
 				
-				case 'icon':
-					//main items
-					var yearItems = mainClipPath.append("g").selectAll(".yearItem")
-						.data(dataByYear)
-						.enter().append("g")
-						.attr("class", "yearItem")
-						.attr("transform", function(d) {
-							d.x = 0;  //for now
-							d.y = 0;  //for now
-							// d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
-							d.radius = efSumScale(d.sum_eigenfactor);
-							return "translate(" + d.x + "," + d.y + ")";
-						});
-					var paperItems = yearItems.append("g").selectAll(".paperItem")
-						.data(function(d) {return d.values})
-						.enter().append("g")
-						.attr("class", "paperItem")
-						.attr("transform", function(d, i) {
-							d.x = 0;  //for now
-							d.y = 0;  //for now
-							d.idx = i;
-							// d.radius = mainMinRad + (2 * efScale(d.eigenfactor));
-							d.radius = efScaleMain(d.eigenfactor);
-							return "translate(" + d.x + "," + d.y + ")";
-						});
+		}
 
 
-					var paperMarks = paperItems.append("text")
-						.attr("class", "paperMark")
-						.style("font-family", "FontAwesome")
-						.text("\uf0f6")
-						// .on('mouseover', expand)
-						.attr("text-anchor", "middle")
-						.on('mouseover', function(d) {
-							contract();
-							var sel = paperItems.filter(function(dd) {return dd.year===d.year});
-							expand(sel);
-							});
-						// .on('mouseout', contract)
+		var paperLabels = paperItems.append("text")
+			.attr("text-anchor", "end")
+			.attr("class", "paperLabel")
+			.style("display", "none")
+			.attr("transform", "translate(-15,0)")  // nudge left
+			// .text(function(d) {return d.title;});
+			.html(function(d) {return '<a target="_blank" href="' + d.url + '">' + d.title + '</a>';});
 
-					var bbox = paperMarks.node().getBBox();
-					paperItems.insert("rect", ".paperMark")
-						.attr("x", bbox.x)
-						.attr("y", bbox.y)
-						.attr("width", bbox.width)
-						.attr("height", bbox.height)
-						.style("fill", "white");
 
-					// //main items
-					// var paperItems = mainClipPath.append("g").selectAll(".paperItem")
-					// 	.data(data_total)
-					// 	.enter().append("g")
-					// 	.attr("class", "paperItem")
-					// 	.attr("transform", function(d) {
-					// 		d.x = 0;  //for now
-					// 		d.y = 0;  //for now
-					// 		d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
-					// 		return "translate(" + d.x + "," + d.y + ")";
-					// 	});
-					// var paperMarks = paperItems.append("text")
-					// 	.attr("class", "paperMark")
-					// 	.style("font-family", "FontAwesome")
-					// 	.text("\uf0f6")
-					// 	// .on('mouseover', expand)
-					// 	.on('mouseover', function(d) {
-					// 		contract();
-					// 		var sel = paperItems.filter(function(dd) {return dd.year===d.year});
-					// 		expand(sel);
-					// 		});
-					// 	// .on('mouseout', contract)
 
-					// var yearItems = mainClipPath.append("g").selectAll(".yearItem")
-					// 	.data(dataByYear)
-					// 	.enter().append("g")
-					// 	.attr("class", "yearItem")
-					// 	.attr("transform", function(d) {
-					// 		d.x = 0;  //for now
-					// 		d.y = 0;  //for now
-					// 		d.radius = mainMinRad + (2 * efSumScale(d.sum_eigenfactor));
-					// 		return "translate(" + d.x + "," + d.y + ")";
-					// 	});
-					// var yearMarks = yearItems.append("text")
-					// 	.attr("class", "yearMark")
-					// 	.style("font-family", "FontAwesome")
-					// 	.text("\uf0f6")
-					// 	// .on('mouseover', expand)
-					// 	.on('mouseover', function(d) {
-					// 		contract();
-					// 		var sel = paperItems.filter(function(dd) {return dd.year===d.year});
-					// 		expand(sel);
-					// 		});
-					// 	// .on('mouseout', contract)
+		//mini labels
+		// mini.append("g").selectAll(".miniLabels")
+		// 	.data(data)
+		// 	.enter().append("text")
+		// 	.text(function(d) {return d.id;})
+		// 	.attr("x", function(d) {return x(d.start);})
+		// 	.attr("y", function(d) {return y2(d.lane + .5);})
+		// 	.attr("dy", ".5ex");
 
+		//brush
+		var brush = d3.svg.brush()
+							.x(x)
+							.on("brush", display);
+
+		mini.append("g")
+			.attr("class", "x brush")
+			.call(brush)
+			.selectAll("rect")
+			.attr("y", 1)
+			.attr("height", miniHeight - 1);
+
+		var extentLines = [];
+		for (var i = 0; i < 2 ; i++) {
+			extentLines.push(chart.append("line").attr("class", "extentLine"));
+		}
+		function updateExtentLines(left, right) {
+			if (brush.empty()) {
+				extentLines.forEach(function(sel) {sel.style("display", "none");})
+			} else {
+				extentLines.forEach(function(sel) {sel.style("display", "");})
+				extentLines[0].attr("x1", m[3])
+					.attr("y1", m[0])
+					.attr("x2", left + m[3])
+					.attr("y2", (mainHeight + m[0]));
+				extentLines[1].attr("x1", w+m[3])
+					.attr("y1", m[0])
+					.attr("x2", right + m[3])
+					.attr("y2", (mainHeight + m[0]));
+			}
+		}
+
+		var scrollDur = 150;
+		function moveBrush(direction) {
+			// if (brush.empty() || minExtent<timeBegin || maxExtent>timeEnd) {
+			if (brush.empty()) {
+				minExtent = (timeEnd + timeBegin) / 2;
+				maxExtent = ( (timeEnd + timeBegin) / 2 ) + 1;
+				changeExtent(minExtent, maxExtent, 0);
+				return;
+			}
+			switch (direction) {
+				case 'left':
+					changeExtent(Math.round(minExtent-1), Math.round(maxExtent-1), scrollDur, "linear");
+					break;
+
+				case 'right':
+					changeExtent(Math.round(minExtent+1), Math.round(maxExtent+1), scrollDur, "linear");
+					break;
+
+				case 'zoomIn':
+					changeExtent(Math.round(minExtent+1), Math.round(maxExtent-1), scrollDur, "linear");
+					break;
+
+				case 'zoomOut':
+					changeExtent(Math.round(minExtent-1), Math.round(maxExtent+1), scrollDur, "linear");
 					break;
 					
 			}
+			return;
+		}
 
-
-			var paperLabels = paperItems.append("text")
-				.attr("text-anchor", "end")
-				.attr("class", "paperLabel")
-				.style("display", "none")
-				.attr("transform", "translate(-15,0)")  // nudge left
-				// .text(function(d) {return d.title;});
-				.html(function(d) {return '<a target="_blank" href="' + d.url + '">' + d.title + '</a>';});
-
-
-
-			//mini labels
-			// mini.append("g").selectAll(".miniLabels")
-			// 	.data(data)
-			// 	.enter().append("text")
-			// 	.text(function(d) {return d.id;})
-			// 	.attr("x", function(d) {return x(d.start);})
-			// 	.attr("y", function(d) {return y2(d.lane + .5);})
-			// 	.attr("dy", ".5ex");
-
-			//brush
-			var brush = d3.svg.brush()
-								.x(x)
-								.on("brush", display);
-
-			mini.append("g")
-				.attr("class", "x brush")
-				.call(brush)
-				.selectAll("rect")
-				.attr("y", 1)
-				.attr("height", miniHeight - 1);
-
-			var extentLines = [];
-			for (var i = 0; i < 2 ; i++) {
-				extentLines.push(chart.append("line").attr("class", "extentLine"));
-			}
-			function updateExtentLines(left, right) {
-				if (brush.empty()) {
-					extentLines.forEach(function(sel) {sel.style("display", "none");})
-				} else {
-					extentLines.forEach(function(sel) {sel.style("display", "");})
-					extentLines[0].attr("x1", m[3])
-						.attr("y1", m[0])
-						.attr("x2", left + m[3])
-						.attr("y2", (mainHeight + m[0]));
-					extentLines[1].attr("x1", w+m[3])
-						.attr("y1", m[0])
-						.attr("x2", right + m[3])
-						.attr("y2", (mainHeight + m[0]));
-				}
-			}
-
-			var scrollDur = 150;
-			function moveBrush(direction) {
-				// if (brush.empty() || minExtent<timeBegin || maxExtent>timeEnd) {
-				if (brush.empty()) {
-					minExtent = (timeEnd + timeBegin) / 2;
-					maxExtent = ( (timeEnd + timeBegin) / 2 ) + 1;
-					changeExtent(minExtent, maxExtent, 0);
-					return;
-				}
-				switch (direction) {
-					case 'left':
-						changeExtent(Math.round(minExtent-1), Math.round(maxExtent-1), scrollDur, "linear");
-						break;
-
-					case 'right':
-						changeExtent(Math.round(minExtent+1), Math.round(maxExtent+1), scrollDur, "linear");
-						break;
-
-					case 'zoomIn':
-						changeExtent(Math.round(minExtent+1), Math.round(maxExtent-1), scrollDur, "linear");
-						break;
-
-					case 'zoomOut':
-						changeExtent(Math.round(minExtent-1), Math.round(maxExtent+1), scrollDur, "linear");
-						break;
-						
-				}
-				return;
-			}
-
-			var scrollItems = mainClipPath.append("g")
-								.attr("class", "scrollItems")
-								.attr("transform", "translate(0," + (mainHeight*0.7) + ")");
-			scrollItems.append("text")
-				.attr("class", "leftArrow")
-				.style("font-family", "FontAwesome")
-				.text("\uf060")
-				.attr("x", 0)
-				// .attr("y", mainHeight / 2)
-				// .style("font-size", "1.5em")
-				.on("click", function() {
-					// changeExtent(Math.round(minExtent-1), Math.round(maxExtent-1), scrollDur, "linear");
-					moveBrush('left');
-					});
-			scrollItems.append("text")
-				.attr("class", "rightArrow")
-				.style("font-family", "FontAwesome")
-				.text("\uf061")
-				.attr("text-anchor", "end")
-				.attr("x", w)
-				// .attr("y", mainHeight / 2)
-				// .style("font-size", "1.5em")
-				.on("click", function() {
-					// changeExtent(Math.round(minExtent+1), Math.round(maxExtent+1), scrollDur, "linear");
-					moveBrush('right');
-					});
-
-			var zoomItems = scrollItems.append("g")
-								.attr("class", "zoomItems")
-								.attr("transform", "translate(" + (w-m[1]-10) + ",30)")
-								.style("opacity", .01)
-								.on("mouseover", zoomMouseOver)
-								.on("mouseout", zoomMouseOut);
-			// scrollItems.append("text")
-			zoomItems.append("text")
-				.attr("class", "zoomIn")
-				.style("font-family", "FontAwesome")
-				.text("\uf196")  // http://fontawesome.io/icon/plus-square-o/
-				// .attr("x", 10)
-				// .attr("y", mainHeight / 2)
-				// .attr("x", w-m[1]-10)
-				// .attr("y", 30)
-				// .style("font-size", "1.5em")
-				.on("click", function() {
-					// changeExtent(Math.round(minExtent+1), Math.round(maxExtent-1), scrollDur, "linear");
-					moveBrush('zoomIn')
-					});
-			zoomItems.append("text")
-				.attr("class", "zoomOut")
-				.style("font-family", "FontAwesome")
-				.text("\uf147")  // http://fontawesome.io/icon/minus-square-o/
-				// .attr("y", mainHeight / 2)
-				// .attr("x", w-m[1]-10)
-				// .attr("y", 50)
-				.attr("y", 20)
-				// .style("font-size", "1.5em")
-				.on("click", function() {
-					// changeExtent(Math.round(minExtent-1), Math.round(maxExtent+1), scrollDur, "linear");
-					moveBrush('zoomOut');
-					});
-
-			function zoomMouseOver() {
-				// $( '.zoomIn, .zoomOut' ).fadeTo(400, 1);
-				$( '.zoomItems' ).stop().fadeTo(400, 1);
-			}
-			function zoomMouseOut() {
-				// $( '.zoomIn, .zoomOut' ).fadeTo(400, .01);
-				$( '.zoomItems' ).stop().fadeTo(400, .01);
-			}
-
-			// Icon to clear the brush. Finish initializing it in display()
-			// var clearBrushIcon = d3.select(".brush").append("text")
-			var clearBrushIcon = mini.append("text")
-				.attr("class", "clearBrushIcon")
-				.style("font-family", "FontAwesome")
-				.style("font-size", "1em")
-				.attr("text-anchor", "end")
-				.attr("title", "Clear the timeline in order to draw a new region")
-				.text("\uf00d");
-
-			chart.on("wheel.zoom", function() {
-					if (d3.event.wheelDeltaY>0) {
-						moveBrush('zoomIn');
-					} else if (d3.event.wheelDeltaY<0) {
-						moveBrush('zoomOut');
-					}
-					if (d3.event.wheelDeltaX>0) {
-						moveBrush('left');
-					} else if (d3.event.wheelDeltaX<0) {
-						moveBrush('right');
-					}
+		var scrollItems = mainClipPath.append("g")
+							.attr("class", "scrollItems")
+							.attr("transform", "translate(0," + (mainHeight*0.7) + ")");
+		scrollItems.append("text")
+			.attr("class", "leftArrow")
+			.style("font-family", "FontAwesome")
+			.text("\uf060")
+			.attr("x", 0)
+			// .attr("y", mainHeight / 2)
+			// .style("font-size", "1.5em")
+			.on("click", function() {
+				// changeExtent(Math.round(minExtent-1), Math.round(maxExtent-1), scrollDur, "linear");
+				moveBrush('left');
+				});
+		scrollItems.append("text")
+			.attr("class", "rightArrow")
+			.style("font-family", "FontAwesome")
+			.text("\uf061")
+			.attr("text-anchor", "end")
+			.attr("x", w)
+			// .attr("y", mainHeight / 2)
+			// .style("font-size", "1.5em")
+			.on("click", function() {
+				// changeExtent(Math.round(minExtent+1), Math.round(maxExtent+1), scrollDur, "linear");
+				moveBrush('right');
 				});
 
-			// initialize brush
-			var midpointYear = ( timeEnd + timeBegin ) / 2,
-				brushInit = [midpointYear, midpointYear];
+		var zoomItems = scrollItems.append("g")
+							.attr("class", "zoomItems")
+							.attr("transform", "translate(" + (w-m[1]-10) + ",30)")
+							.style("opacity", .01)
+							.on("mouseover", zoomMouseOver)
+							.on("mouseout", zoomMouseOut);
+		// scrollItems.append("text")
+		zoomItems.append("text")
+			.attr("class", "zoomIn")
+			.style("font-family", "FontAwesome")
+			.text("\uf196")  // http://fontawesome.io/icon/plus-square-o/
+			// .attr("x", 10)
+			// .attr("y", mainHeight / 2)
+			// .attr("x", w-m[1]-10)
+			// .attr("y", 30)
+			// .style("font-size", "1.5em")
+			.on("click", function() {
+				// changeExtent(Math.round(minExtent+1), Math.round(maxExtent-1), scrollDur, "linear");
+				moveBrush('zoomIn')
+				});
+		zoomItems.append("text")
+			.attr("class", "zoomOut")
+			.style("font-family", "FontAwesome")
+			.text("\uf147")  // http://fontawesome.io/icon/minus-square-o/
+			// .attr("y", mainHeight / 2)
+			// .attr("x", w-m[1]-10)
+			// .attr("y", 50)
+			.attr("y", 20)
+			// .style("font-size", "1.5em")
+			.on("click", function() {
+				// changeExtent(Math.round(minExtent-1), Math.round(maxExtent+1), scrollDur, "linear");
+				moveBrush('zoomOut');
+				});
+
+		function zoomMouseOver() {
+			// $( '.zoomIn, .zoomOut' ).fadeTo(400, 1);
+			$( '.zoomItems' ).stop().fadeTo(400, 1);
+		}
+		function zoomMouseOut() {
+			// $( '.zoomIn, .zoomOut' ).fadeTo(400, .01);
+			$( '.zoomItems' ).stop().fadeTo(400, .01);
+		}
+
+		// Icon to clear the brush. Finish initializing it in display()
+		// var clearBrushIcon = d3.select(".brush").append("text")
+		var clearBrushIcon = mini.append("text")
+			.attr("class", "clearBrushIcon")
+			.style("font-family", "FontAwesome")
+			.style("font-size", "1em")
+			.attr("text-anchor", "end")
+			.attr("title", "Clear the timeline in order to draw a new region")
+			.text("\uf00d");
+
+		chart.on("wheel.zoom", function() {
+				if (d3.event.wheelDeltaY>0) {
+					moveBrush('zoomIn');
+				} else if (d3.event.wheelDeltaY<0) {
+					moveBrush('zoomOut');
+				}
+				if (d3.event.wheelDeltaX>0) {
+					moveBrush('left');
+				} else if (d3.event.wheelDeltaX<0) {
+					moveBrush('right');
+				}
+			});
+
+		// initialize brush
+		var midpointYear = ( timeEnd + timeBegin ) / 2,
+			brushInit = [midpointYear, midpointYear];
+	
+		// brush.extent(brushInit);
+		mini.select(".brush").call(brush.extent(brushInit));
+
+		display();
 		
-			// brush.extent(brushInit);
-			mini.select(".brush").call(brush.extent(brushInit));
-
-			display();
-			
-			$( document ).trigger( "timelineVis:initComplete" );
+		$( document ).trigger( "timelineVis:initComplete" );
 
 
-			// // I'm not sure there's a way to use d3 transitions to control the brush, but here's a hacky way of doing it manually.
-			// var dly = 30;
-			// function brushTransition(dly) {
-			// 	currExtent = [brush.extent()[0], brush.extent()[1]];
-			// 	brush(d3.select(".brush").transition().duration(dly).call(display));
-			// 	// brush.event(d3.select(".brush").transition().delay(dly).duration(0));
-			// }
-			// // brush.extent([1970,2000]);
+		// // I'm not sure there's a way to use d3 transitions to control the brush, but here's a hacky way of doing it manually.
+		// var dly = 30;
+		// function brushTransition(dly) {
+		// 	currExtent = [brush.extent()[0], brush.extent()[1]];
+		// 	brush(d3.select(".brush").transition().duration(dly).call(display));
+		// 	// brush.event(d3.select(".brush").transition().delay(dly).duration(0));
+		// }
+		// // brush.extent([1970,2000]);
+		// var minExtent = brush.extent()[0],
+		// 	maxExtent = brush.extent()[1];
+		// var destinationExtent = 1998;
+		// var i = maxExtent;
+		// var refreshIntervalId = setInterval(function() {
+		// 	   	i = i + 0.2;
+		// 		brush.extent([minExtent, i]);
+		// 		brushTransition(dly);
+		// 		if (i >= destinationExtent) {
+		// 			clearInterval(refreshIntervalId);
+		// 		}
+		// 	}, dly);
+
+		// // attempt to use tween function to do it. not really working
+		// brush.extent([1970, 2005]);
+		// brush(d3.select(".brush").transition().duration(5000)
+		// 		.tween("side-effects", function() { return function(t, tt, ttt) { console.log(brush.extent()[0]);
+		// 			brush.event(d3.select(".brush").transition().delay(t).duration(0));
+		// 		};}));
+		// brush(d3.select(".brush").transition().duration(1000));
+		// brush.event(d3.select(".brush").transition().delay(1000).duration(0));
+
+
+		function changeExtent(year1, year2, duration, ease, delay) {
+			if (duration === undefined) {
+				duration = 1000;
+			}
+			if (ease === undefined) {
+				ease = "cubic-in-out";
+			}
+			if (delay === undefined) {
+				delay = 0;
+			}
+			if (year1 < timeBegin) {
+				year1 = timeBegin;
+			}
+			if (year2 > timeEnd) {
+				year2 = timeEnd;
+			}
+			brush.event(mini.select(".brush").transition().delay(delay).duration(duration).ease(ease).call(brush.extent([year1, year2])));
+
+		}
+		//
+		// This works! (after modifying the display() function. see the note at the top of display())
+		// brush.event(mini.select(".brush").transition().delay(1000).duration(1000).call(brush.extent([1970, 2000]))
+		// 		.each("end", function() {console.log("initialized");}));
+		// var initDuration = 1000,
+		// 	initDelay = 1000;
+		// changeExtent(1970, 2000, initDuration, "cubic-in-out", initDelay);
+		// d3.transition("initDemoTransition").delay(initDelay + initDuration)
+		// 	.each("end", demoExpand);
+		// demoInit();
+
+		// not using this currently
+		function expandAll() {
+			expand(paperItems);
+		}
+		var maxEF = d3.max(data_total, function(d) {return d.eigenfactor;});
+
+		function clearBrush() {
+			var mid = (brush.extent()[1] + brush.extent()[0]) / 2;
+			changeExtent(mid, mid, 0);
+		}
+		
+		function display() {
+			// note: calculating the brush extent using brush.extent() doesn't really work here (with transition ticks)
+			// because it goes the final extent values at the beginning of the transition.
+			// So instead, get the measurements of the brush element and calculate the extent using the scale (x.invert())
+			var extentSelect = mini.select(".brush").select(".extent");
+			var minExtentScreen = +extentSelect.attr("x");
+			var maxExtentScreen = minExtentScreen + (+extentSelect.attr("width"));
+			// console.log(x.invert(maxExtentScreen));
 			// var minExtent = brush.extent()[0],
-			// 	maxExtent = brush.extent()[1];
-			// var destinationExtent = 1998;
-			// var i = maxExtent;
-			// var refreshIntervalId = setInterval(function() {
-			// 	   	i = i + 0.2;
-			// 		brush.extent([minExtent, i]);
-			// 		brushTransition(dly);
-			// 		if (i >= destinationExtent) {
-			// 			clearInterval(refreshIntervalId);
-			// 		}
-			// 	}, dly);
-
-			// // attempt to use tween function to do it. not really working
-			// brush.extent([1970, 2005]);
-			// brush(d3.select(".brush").transition().duration(5000)
-			// 		.tween("side-effects", function() { return function(t, tt, ttt) { console.log(brush.extent()[0]);
-			// 			brush.event(d3.select(".brush").transition().delay(t).duration(0));
-			// 		};}));
-			// brush(d3.select(".brush").transition().duration(1000));
-			// brush.event(d3.select(".brush").transition().delay(1000).duration(0));
+			// 	maxExtent = brush.extent()[1],
+			minExtent = x.invert(minExtentScreen);
+			maxExtent = x.invert(maxExtentScreen);
 
 
-			function changeExtent(year1, year2, duration, ease, delay) {
-				if (duration === undefined) {
-					duration = 1000;
-				}
-				if (ease === undefined) {
-					ease = "cubic-in-out";
-				}
-				if (delay === undefined) {
-					delay = 0;
-				}
-				if (year1 < timeBegin) {
-					year1 = timeBegin;
-				}
-				if (year2 > timeEnd) {
-					year2 = timeEnd;
-				}
-				brush.event(mini.select(".brush").transition().delay(delay).duration(duration).ease(ease).call(brush.extent([year1, year2])));
 
+			// hide arrows if you can't go any further
+			if (minExtent <= timeBegin) {
+				d3.select(".leftArrow").style("display", "none");
+			} else {
+				d3.select(".leftArrow").style("display", "");
 			}
-			//
-			// This works! (after modifying the display() function. see the note at the top of display())
-			// brush.event(mini.select(".brush").transition().delay(1000).duration(1000).call(brush.extent([1970, 2000]))
-			// 		.each("end", function() {console.log("initialized");}));
-			// var initDuration = 1000,
-			// 	initDelay = 1000;
-			// changeExtent(1970, 2000, initDuration, "cubic-in-out", initDelay);
-			// d3.transition("initDemoTransition").delay(initDelay + initDuration)
-			// 	.each("end", demoExpand);
-			// demoInit();
-
-			// not using this currently
-			function expandAll() {
-				expand(paperItems);
+			if (maxExtent >= timeEnd) {
+				d3.select(".rightArrow").style("display", "none");
+			} else {
+				d3.select(".rightArrow").style("display", "");
 			}
-			var maxEF = d3.max(data_total, function(d) {return d.eigenfactor;});
-
-			function clearBrush() {
-				var mid = (brush.extent()[1] + brush.extent()[0]) / 2;
-				changeExtent(mid, mid, 0);
+			// hide the zoomIn button if we're zoomed in too far
+			if (maxExtent - minExtent <= 2) {
+				// d3.select(".zoomIn").style("display", "none");
+				d3.select(".zoomIn").classed("hidden", true);
+			} else {
+				// d3.select(".zoomIn").style("display", "");
+				d3.select(".zoomIn").classed("hidden", false);
 			}
-			
-			function display() {
-				// note: calculating the brush extent using brush.extent() doesn't really work here (with transition ticks)
-				// because it goes the final extent values at the beginning of the transition.
-				// So instead, get the measurements of the brush element and calculate the extent using the scale (x.invert())
-				var extentSelect = mini.select(".brush").select(".extent");
-				var minExtentScreen = +extentSelect.attr("x");
-				var maxExtentScreen = minExtentScreen + (+extentSelect.attr("width"));
-				// console.log(x.invert(maxExtentScreen));
-				// var minExtent = brush.extent()[0],
-				// 	maxExtent = brush.extent()[1],
-				minExtent = x.invert(minExtentScreen);
-				maxExtent = x.invert(maxExtentScreen);
 
-
-
-				// hide arrows if you can't go any further
-				if (minExtent <= timeBegin) {
-					d3.select(".leftArrow").style("display", "none");
-				} else {
-					d3.select(".leftArrow").style("display", "");
-				}
-				if (maxExtent >= timeEnd) {
-					d3.select(".rightArrow").style("display", "none");
-				} else {
-					d3.select(".rightArrow").style("display", "");
-				}
-				// hide the zoomIn button if we're zoomed in too far
-				if (maxExtent - minExtent <= 2) {
-					// d3.select(".zoomIn").style("display", "none");
-					d3.select(".zoomIn").classed("hidden", true);
-				} else {
-					// d3.select(".zoomIn").style("display", "");
-					d3.select(".zoomIn").classed("hidden", false);
-				}
-
-				if (brush.empty()) {
-					clearBrushIcon.style("display", "none");
-				} else {
-					clearBrushIcon.style("display", "")
-						.style("opacity", 0)
-						// .style("z-index", -99)
-						.attr("transform", constructTranslate(maxExtentScreen-2, 15))
-						.transition().duration(300)
-						.style("opacity", .4);
-					clearBrushIcon.on("click", function() {
-						clearBrush();
-						contract();
-					});
-				}
-
-
-
-				// Hide main items if the brush is empty
-				if (brush.empty()) {
-					// yearItems.style("display", "none");
-					// changeExtent(timeBegin, timeEnd, 0);
-					//
-					// show all main items, but keep the brush hidden
-					updateMain(timeBegin,timeEnd);
-					// this will remove the extent lines:
-					updateExtentLines();
-				} else {
-					// d3.select(".brush").attr("display", "");
-					updateMain(minExtent, maxExtent);
-					updateExtentLines(minExtentScreen, maxExtentScreen);
-				}
+			if (brush.empty()) {
+				clearBrushIcon.style("display", "none");
+			} else {
+				clearBrushIcon.style("display", "")
+					.style("opacity", 0)
+					// .style("z-index", -99)
+					.attr("transform", constructTranslate(maxExtentScreen-2, 15))
+					.transition().duration(300)
+					.style("opacity", .4);
+				clearBrushIcon.on("click", function() {
+					clearBrush();
+					contract();
+				});
 			}
+
+
+
+			// Hide main items if the brush is empty
+			if (brush.empty()) {
+				// yearItems.style("display", "none");
+				// changeExtent(timeBegin, timeEnd, 0);
+				//
+				// show all main items, but keep the brush hidden
+				updateMain(timeBegin,timeEnd);
+				// this will remove the extent lines:
+				updateExtentLines();
+			} else {
+				// d3.select(".brush").attr("display", "");
+				updateMain(minExtent, maxExtent);
+				updateExtentLines(minExtentScreen, maxExtentScreen);
+			}
+		}
 
 		function updateMain(minExtent, maxExtent) {
 			
@@ -836,8 +840,10 @@ timelineVis.timelineVis = (function() {
 
 					// update styles of mini items that are visible in the main display.
 					// reset all to normal, then style just the visible ones
-					miniItems.style(stylesBase);
+					// miniItems.style(stylesBase);
+					miniItems.style(stylesVisible);
 					miniItems.filter(function(d) {
+						console.log(minExtent);
 						var match = false;
 						visItems.forEach(function(dd) {
 							if (d.id==dd.firstTitle) {

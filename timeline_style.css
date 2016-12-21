@@ -21,7 +21,8 @@
 }
 
 .chart {
-	shape-rendering: crispEdges;
+	/* shape-rendering: crispEdges; */
+	shape-rendering: auto;
 	max-width: 960px;
 }
 
@@ -51,7 +52,7 @@ g {
 }
 */
 
-.yearItem circle {
+.yearItem circle, .minimized circle {
 	fill: #9F1D21;
 	fill-opacity: .8;
 	stroke-width: 6;	

@@ -791,6 +791,8 @@ timelineVis.timelineVis = (function() {
 
 			if (brush.empty()) {
 				clearBrushIcon.style("display", "none");
+				d3.select(".leftArrow").style("display", "none");
+				d3.select(".rightArrow").style("display", "none");
 			} else {
 				clearBrushIcon.style("display", "")
 					.style("opacity", 0)

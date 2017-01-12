@@ -1,4 +1,4 @@
-var json_fname = 'Climate_change_network.json'
+var json_fname = '../Climate_change_network.json'
 
 d3.json(json_fname, function(error, data) {
 	var w = 960,

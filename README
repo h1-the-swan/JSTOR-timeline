@@ -1,8 +1,18 @@
 Author: Jason Portenoy
+University of Washington, Information School, Datalab
 
-Tests for the JSTOR Labs Influential Articles Timeline widget.
+JSTOR Labs Influential Articles Timeline widget.
 
 2016-06-20 Moved to its own repo
 
 data comes in json format from an ajax call to e.g.:
 http://labs.jstor.org/topics/recommendations?topic=Biodiversity
+
+View timeline visualization at `index.html`
+
+The widget is defined in `timelineVis_Main.js`. 
+Some configuration settings are defined in `timelineVis_config.js`. 
+Styles are in `timeline_style.css`. 
+The "minimize" feature is added in `timelineVis_minimize.js`.
+
+There is also a (more experimental) force-directed citation network visualization at `citation_graph/citation_graph.html`

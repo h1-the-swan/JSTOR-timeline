@@ -1,3 +1,3 @@
-import timelineVis from './timelineVis_Main.js';
-export { timelineVis };
+import TimelineVis from './timelineVis_Main.js';
+export { TimelineVis };
 

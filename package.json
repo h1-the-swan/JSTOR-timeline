@@ -1,8 +1,8 @@
 {
-  "name": "d3-article-timeline",
+  "name": "d3_article_timeline",
   "version": "0.1.0",
   "description": "Timeline view of scholarly articles",
-  "main": "lib/d3-article-timeline.js",
+  "main": "lib/d3_article_timeline.js",
   "scripts": {
     "build": "webpack --env dev && webpack --env build",
     "dev": "webpack --progress --colors --watch --env dev",

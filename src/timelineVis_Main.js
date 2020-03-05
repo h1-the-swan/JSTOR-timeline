@@ -5,6 +5,9 @@ import * as d3 from 'd3';
 import jQuery from 'jquery';
 const $ = jQuery;
 
+import * as d3_textwrap from 'd3-textwrap';
+console.log(d3_textwrap);
+
 // reusable chart pattern inspired by:
 // https://bost.ocks.org/mike/chart/
 // and
@@ -15,7 +18,7 @@ class TimelineVis {
 			el: null,
 			data: null,
 			width: 960,
-			color: d3.scale.ordinal(d3.schemeCategory10),
+			color: d3.scaleOrdinal(d3.schemeCategory10),
 			forceStrength: -2,
 		};
 		Object.assign(this, defaults, opts);  // opts will overwrite defaults
@@ -72,7 +75,8 @@ class TimelineVis {
 			}
 
 
-			var wrap = d3.textwrap().method("tspans");
+			// var wrap = d3.textwrap().method("tspans");
+			var wrap = d3_textwrap.textwrap().method("tspans");
 
 			function parseData(data) {
 				data.forEach(function(d) {
@@ -137,35 +141,37 @@ class TimelineVis {
 
 			var minExtent, maxExtent;  // these will be the lower and upper years displayed in main
 
-			var stylesBase = {
-				'opacity': .2
-			};
-			var stylesVisible = {
-				'opacity': 1
-			};
+			// var stylesBase = {
+			// 	'opacity': .2
+			// };
+			// var stylesVisible = {
+			// 	'opacity': 1
+			// };
+			var stylesBase = "opacity: .2;";
+			var stylesVisible = "opacity: 1;";
 
 			//scales
-			var x = d3.scale.linear()
+			var x = d3.scaleLinear()
 					.domain([timeBegin, timeEnd])
 					.range([0, w]);
-			var x1 = d3.scale.linear()
+			var x1 = d3.scaleLinear()
 					.range([0, w]);
-			var y1 = d3.scale.linear()
+			var y1 = d3.scaleLinear()
 					.domain([0, laneLength])
 					.range([0, mainHeight]);
-			var y2 = d3.scale.linear()
+			var y2 = d3.scaleLinear()
 					.domain([0, laneLength])
 					.range([0, miniHeight]);
 			var efExtent = d3.extent(data_total, function(d) { return d.eigenfactor; });
-			var efScaleMini = d3.scale.linear()
+			var efScaleMini = d3.scaleLinear()
 					.domain(efExtent)
 					// .range([0, 5]);
 					.range([miniMinRad, miniMaxRad]);
-			var efScaleMain = d3.scale.linear()
+			var efScaleMain = d3.scaleLinear()
 					.domain(efExtent)
 					// .range([0, 5]);
 					.range([mainMinRad, mainMaxRad]);
-			var efSumScale = d3.scale.linear()
+			var efSumScale = d3.scaleLinear()
 					.domain(d3.extent(dataByYear, function(d) { return d.sum_eigenfactor; }))
 					// .range([0, 5]);
 					.range([mainMinRad, mainMaxRad]);
@@ -297,8 +303,8 @@ class TimelineVis {
 			// 	.attr("class", "laneText");
 
 			// Axes
-			var xAxisMini = d3.svg.axis()
-				.orient("bottom")
+			var xAxisMini = d3.axisBottom()
+				// .orient("bottom")
 				// .ticks(5)
 				.scale(x)
 				.tickFormat(d3.format("d"));
@@ -308,8 +314,8 @@ class TimelineVis {
 				.attr("transform", "translate(0," + (miniHeight) + ")")
 				.call(xAxisMini);
 
-			var xAxisMain = d3.svg.axis()
-				.orient("top")
+			var xAxisMain = d3.axisTop()
+				// .orient("top")
 				.scale(x1)
 				.tickFormat(d3.format("d"));
 
@@ -397,8 +403,9 @@ class TimelineVis {
 							var thisYearItem = d3.select(this);
 							expand(sel, thisYearItem);
 							})
-						// .on('mouseout', contract)
-						.style(stylesVisible);
+						.on('mouseout', contract)
+						// .style(stylesVisible);
+						.attr("style", stylesVisible);
 						
 					//label for number of papers
 					yearItems.append("text")
@@ -553,13 +560,13 @@ class TimelineVis {
 			}
 
 
-			var paperLabels = paperItems.append("text")
-				.attr("text-anchor", "end")
-				.attr("class", "paperLabel")
-				.style("display", "none")
-				.attr("transform", "translate(-15,0)")  // nudge left
-				// .text(function(d) {return d.title;});
-				.html(function(d) {return '<a target="_blank" href="' + d.url + '">' + d.title + '</a>';});
+			// var paperLabels = paperItems.append("text")
+			// 	.attr("text-anchor", "end")
+			// 	.attr("class", "paperLabel")
+			// 	.style("display", "none")
+			// 	.attr("transform", "translate(-15,0)")  // nudge left
+			// 	// .text(function(d) {return d.title;});
+			// 	.html(function(d) {return '<a target="_blank" href="' + d.url + '">' + d.title + '</a>';});
 
 
 
@@ -573,9 +580,13 @@ class TimelineVis {
 			// 	.attr("dy", ".5ex");
 
 			//brush
-			var brush = d3.svg.brush()
-								.x(x)
-								.on("brush", display);
+			// var brush = d3.svg.brush()
+			var brush = d3.brushX()
+								// .x(x)
+								.extent([[x.range()[0], 0], [x.range()[1], miniHeight - 1]])
+								// .on("brush", display);
+								.on("end", display);
+			var brushEmpty = true;
 
 			mini.append("g")
 				.attr("class", "x brush")
@@ -589,7 +600,8 @@ class TimelineVis {
 				extentLines.push(chart.append("line").attr("class", "extentLine"));
 			}
 			function updateExtentLines(left, right) {
-				if (brush.empty()) {
+				// if (brush.empty()) {
+				if (brushEmpty) {
 					extentLines.forEach(function(sel) {sel.style("display", "none");})
 				} else {
 					extentLines.forEach(function(sel) {sel.style("display", "");})
@@ -605,9 +617,11 @@ class TimelineVis {
 			}
 
 			var scrollDur = 150;
+			console.log(brush);
 			function moveBrush(direction) {
 				// if (brush.empty() || minExtent<timeBegin || maxExtent>timeEnd) {
-				if (brush.empty()) {
+				// if (brush.empty()) {
+				if (brushEmpty) {
 					minExtent = (timeEnd + timeBegin) / 2;
 					maxExtent = ( (timeEnd + timeBegin) / 2 ) + 1;
 					changeExtent(minExtent, maxExtent, 0);
@@ -730,7 +744,7 @@ class TimelineVis {
 			// initialize brush
 			var midpointYear = ( timeEnd + timeBegin ) / 2,
 				brushInit = [midpointYear, midpointYear];
-		
+
 			// brush.extent(brushInit);
 			mini.select(".brush").call(brush.extent(brushInit));
 
@@ -815,7 +829,8 @@ class TimelineVis {
 				// note: calculating the brush extent using brush.extent() doesn't really work here (with transition ticks)
 				// because it goes the final extent values at the beginning of the transition.
 				// So instead, get the measurements of the brush element and calculate the extent using the scale (x.invert())
-				var extentSelect = mini.select(".brush").select(".extent");
+				// var extentSelect = mini.select(".brush").select(".extent");
+				var extentSelect = mini.select(".brush").select(".selection");
 				var minExtentScreen = +extentSelect.attr("x");
 				var maxExtentScreen = minExtentScreen + (+extentSelect.attr("width"));
 				// console.log(x.invert(maxExtentScreen));
@@ -846,27 +861,29 @@ class TimelineVis {
 					d3.select(".zoomIn").classed("hidden", false);
 				}
 
-				if (brush.empty()) {
+			// 	// if (brush.empty()) {
+			// 	if (d3.event.selection === null) {
 					clearBrushIcon.style("display", "none");
 					d3.select(".leftArrow").style("display", "none");
 					d3.select(".rightArrow").style("display", "none");
-				} else {
-					clearBrushIcon.style("display", "")
-						.style("opacity", 0)
-						// .style("z-index", -99)
-						.attr("transform", constructTranslate(maxExtentScreen-2, 15))
-						.transition().duration(300)
-						.style("opacity", .4);
-					clearBrushIcon.on("click", function() {
-						clearBrush();
-						contract();
-					});
-				}
-
-
-
-				// Hide main items if the brush is empty
-				if (brush.empty()) {
+			// 	} else {
+			// 		clearBrushIcon.style("display", "")
+			// 			.style("opacity", 0)
+			// 			// .style("z-index", -99)
+			// 			.attr("transform", constructTranslate(maxExtentScreen-2, 15))
+			// 			.transition().duration(300)
+			// 			.style("opacity", .4);
+			// 		clearBrushIcon.on("click", function() {
+			// 			clearBrush();
+			// 			contract();
+			// 		});
+			// 	}
+            //
+            //
+            //
+			// 	// Hide main items if the brush is empty
+			// 	// if (brush.empty()) {
+			// 	if (d3.event.selection === null) {
 					// yearItems.style("display", "none");
 					// changeExtent(timeBegin, timeEnd, 0);
 					//
@@ -874,11 +891,11 @@ class TimelineVis {
 					updateMain(timeBegin,timeEnd);
 					// this will remove the extent lines:
 					updateExtentLines();
-				} else {
-					// d3.select(".brush").attr("display", "");
-					updateMain(minExtent, maxExtent);
-					updateExtentLines(minExtentScreen, maxExtentScreen);
-				}
+			// 	} else {
+			// 		// d3.select(".brush").attr("display", "");
+			// 		updateMain(minExtent, maxExtent);
+			// 		updateExtentLines(minExtentScreen, maxExtentScreen);
+			// 	}
 			}
 
 			function updateMain(minExtent, maxExtent) {
@@ -886,6 +903,7 @@ class TimelineVis {
 				switch (markType) {
 					case 'circle':
 						var visItems = yearItems.filter(function(d) {return d.year < maxExtent && d.year > minExtent;})
+						console.log(visItems);
 						var notVisItems = yearItems.filter(function(d) {return d.year>= maxExtent || d.year <= minExtent;});
 						visItems.style("display", "");
 						notVisItems.style("display", "none");
@@ -900,17 +918,20 @@ class TimelineVis {
 						// update styles of mini items that are visible in the main display.
 						// reset all to normal, then style just the visible ones
 						// miniItems.style(stylesBase);
-						miniItems.style(stylesVisible);
+						// miniItems.style(stylesVisible);
+						miniItems.attr("style", stylesVisible);
 						miniItems.filter(function(d) {
 							console.log(minExtent);
 							var match = false;
-							visItems.forEach(function(dd) {
+							// visItems.forEach(function(dd) {
+							visItems.each(function(dd) {
 								if (d.id==dd.firstTitle) {
 									match = true;
 								}
 							});
 							return match;
-							}).style(stylesVisible);
+							// }).style(stylesVisible);
+							}).attr("style", stylesVisible);
 
 						//update main item marks
 						visItems.attr("transform", function(d) {
@@ -919,6 +940,7 @@ class TimelineVis {
 							return "translate(" + d.x + "," + d.y + ")";
 						});
 
+						console.log(yearMarks);
 						yearMarks.attr("r", function(d) {return d.radius;});
 
 						break;
@@ -939,10 +961,12 @@ class TimelineVis {
 
 						// update styles of mini items that are visible in the main display.
 						// reset all to normal, then style just the visible ones
-						miniItems.style(stylesBase);
+						// miniItems.style(stylesBase);
+						miniItems.attr("style", stylesBase);
 						miniItems.filter(function(d) {
 							var match = false;
-							visItems.forEach(function(dd) {
+							// visItems.forEach(function(dd) {
+							visItems.each(function(dd) {
 								if (d.id==dd.firstTitle) {
 									match = true;
 								}
@@ -1099,23 +1123,31 @@ class TimelineVis {
 				// contract();
 				var dur = 500;
 				// var sel = paperItems.filter(function(d) {return d.year===yearData.year});
-				var transitionStartStyle = {'pointer-events': 'none', 'cursor': 'default'},
-					transitionEndStyle = {'pointer-events': 'auto', 'cursor': 'pointer'};
+				// var transitionStartStyle = {'pointer-events': 'none', 'cursor': 'default'},
+				// 	transitionEndStyle = {'pointer-events': 'auto', 'cursor': 'pointer'};
+				var transitionStartStyle = "pointer-events: none; cursor: default;",
+					transitionEndStyle = "pointer-events: auto; cursor: pointer;";
 				// sel.style("pointer-events", "none")
-				var line = d3.svg.line().x(function(d) {return d[0]}).y(function(d) {return d[1]});
+				// var line = d3.svg.line().x(function(d) {return d[0]}).y(function(d) {return d[1]});
+				var line = d3.line().x(function(d) {return d[0]}).y(function(d) {return d[1]});
 				// linedata will be an array of [x, y] values that start at the year circle and track the paper circles
 				var linedata = [];
 				linedata.push([0,0]);
-				sel.style(transitionStartStyle)
+				// sel.style(transitionStartStyle)
+				console.log('dddddd');
+				sel.attr("style", transitionStartStyle)
 					.transition().duration(dur)
 					.attr("transform", function(d, i) {
 						linedata.push([afterTransitionX(d, i), afterTransitionY(d, i)]);
 						return "translate(" + afterTransitionX(d, i) + "," + afterTransitionY(d, i) + ")";
 					})
-					.each("start", function() {d3.select(this).classed("expanded", true)})
+					// .each("start", function() {d3.select(this).classed("expanded", true)})
+					.on("start", function() {d3.select(this).classed("expanded", true)})
 					// .each("end", function() {d3.select(this).style("pointer-events", "auto");});
-					.each("end", function() {
-						d3.select(this).style(transitionEndStyle);
+					// .each("end", function() {
+					.on("end", function() {
+						// d3.select(this).style(transitionEndStyle);
+						d3.select(this).attr("style", transitionEndStyle);
 					});
 					
 					// .style("pointer-events", "auto");
@@ -1138,7 +1170,8 @@ class TimelineVis {
 					.duration(dur)
 					.style("opacity", 1);
 				// labelsCollisionDetect();
-				d3.transition().duration(dur).each("end", function() {
+				// d3.transition().duration(dur).each("end", function() {
+				d3.transition().duration(dur).on("end", function() {
 					thisYearItem.append("path").datum(linedata).attr("class", "joinLine").attr("d", line);
 					display()
 				});
@@ -1152,7 +1185,8 @@ class TimelineVis {
 				// console.log(sel.empty());
 				sel.transition().duration(dur)
 					.attr("transform", "translate(0,0)")
-					.each("end", function() {
+					// .each("end", function() {
+					.on("end", function() {
 						d3.select(this).classed("expanded", false)
 							.style("pointer-events", "");
 					})
@@ -1367,7 +1401,8 @@ class TimelineVis {
 							// constructTranslate(initBrushPosition+15, mainHeight+m[0]+(miniHeight/2))
 							constructTranslate(initBrushPosition, mainHeight+m[0]+(miniHeight/2))
 							)
-					.each("end", function() {
+					// .each("end", function() {
+					.on("end", function() {
 						if (chart.classed("demoInProgress")) {
 							demoDrawBrush();
 						} else {
@@ -1386,7 +1421,8 @@ class TimelineVis {
 							var xPos = x(brush.extent()[1]) + m[3];
 							return constructTranslate(xPos, mainHeight+m[0]+(miniHeight/2));
 						})
-					.each("end", function() {
+					// .each("end", function() {
+					.on("end", function() {
 						if (chart.classed("demoInProgress")) {
 							demoExpand();
 						} else {
@@ -1422,7 +1458,8 @@ class TimelineVis {
 					cursorIcon.transition("demoExpand").delay(transitionTimes[3])
 						.duration(transitionTimes[4])
 						.attr("transform", translate)
-						.each("end", function() {
+						// .each("end", function() {
+						.on("end", function() {
 							if (chart.classed("demoInProgress")) {
 								var sel = paperItems.filter(function(dd) {return dd.year==demoYearItem[0][0].__data__.year});
 								expand(sel);
@@ -1444,7 +1481,8 @@ class TimelineVis {
 						.delay(delay)
 						.duration(0)
 						.remove()
-						.each("end", function() {
+						// .each("end", function() {
+						.on("end", function() {
 							contract();
 							enableInteraction();
 						});

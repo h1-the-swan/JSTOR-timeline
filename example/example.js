@@ -1,7 +1,7 @@
 var TimelineVis = d3_article_timeline.TimelineVis;
 
 // d3.json(json_endpoint).then(function(data) {
-d3.json(json_endpoint, function(error, data) {
+d3.json(json_endpoint).then(function(data) {
 	var sel = d3.select('#timeline');
 	console.log(sel);
 	var width = 960,

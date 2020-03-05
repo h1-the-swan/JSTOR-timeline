@@ -44,5 +44,8 @@
   "nyc": {
     "sourceMap": false,
     "instrument": false
+  },
+  "dependencies": {
+    "d3-textwrap": "^2.0.2"
   }
 }

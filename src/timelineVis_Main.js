@@ -76,12 +76,12 @@ class TimelineVis {
 
 			function parseData(data) {
 				data.forEach(function(d) {
-					d.authors = d["authors"];  // list of author names
+					d.authors = d["display_authors"];  // string representing author names
 					if (d.authors === undefined) {
-						d.authors = [];
+						d.authors = null;
 					}
 					d.node_rank = d["node_rank"];
-					d.venue = d["journal"];
+					d.venue = d["venue"];
 					if (d.venue === undefined) {
 						d.venue = null;
 					}
@@ -439,8 +439,9 @@ class TimelineVis {
 								// return text;
 							var span = $( '<span>' );
 							span.append( $( '<p class="tooltip title">' ).text(d.title) ); 
-							span.append( $( '<p class="tooltip authors">' ).text(d.authors.join(", ")) );
-							span.append( $( '<p class="tooltip journal">' ).text(d.venue ? d.venue : "Journal Unknown") ); 
+							// span.append( $( '<p class="tooltip authors">' ).text(d.authors.join(", ")) );
+							span.append( $( '<p class="tooltip authors">' ).text(d.authors) );
+							if (d.venue) span.append( $( '<p class="tooltip journal">' ).text(d.venue) ); 
 							span.append( $( '<p class="tooltip year">' ).text(d.year) ); 
 							return span.html();
 

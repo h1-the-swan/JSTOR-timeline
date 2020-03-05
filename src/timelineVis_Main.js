@@ -77,10 +77,17 @@ class TimelineVis {
 			function parseData(data) {
 				data.forEach(function(d) {
 					d.authors = d["authors"];  // list of author names
-					d.eigenfactor = d["eigenfactor_score"];
+					if (d.authors === undefined) {
+						d.authors = [];
+					}
+					d.node_rank = d["node_rank"];
 					d.venue = d["journal"];
+					if (d.venue === undefined) {
+						d.venue = null;
+					}
 					d.year = d["year"];
-					d.url = "http://labs.jstor.org" + d["stable_url"];
+					d.url = d["url"];
+					d.title = d["display_title"];
 				});
 				return data;
 			}
@@ -90,8 +97,8 @@ class TimelineVis {
 			data_total = parseData(data_total);
 			data_total.forEach(function(d) {
 				d.lane = 0;
-				if (d.eigenfactor === null) {
-					d.eigenfactor = 0;
+				if (d.node_rank === null) {
+					d.node_rank = 0;
 				}
 			});
 			var markType = getParameterByName('m');
@@ -110,7 +117,7 @@ class TimelineVis {
 								.entries(data_total);
 			dataByYear.forEach(function(d) {
 				d.firstTitle = d.values[0].id;
-				d.sum_eigenfactor = d3.sum(d.values, function(dd) {return dd.eigenfactor;});
+				d.sum_eigenfactor = d3.sum(d.values, function(dd) {return dd.node_rank;});
 				d.lane = 0;
 				d.year = +d.key;
 			});
@@ -156,7 +163,7 @@ class TimelineVis {
 			var y2 = d3.scale.linear()
 					.domain([0, laneLength])
 					.range([0, miniHeight]);
-			var efExtent = d3.extent(data_total, function(d) { return d.eigenfactor; });
+			var efExtent = d3.extent(data_total, function(d) { return d.node_rank; });
 			var efScaleMini = d3.scale.linear()
 					.domain(efExtent)
 					// .range([0, 5]);
@@ -233,7 +240,7 @@ class TimelineVis {
 			var mainLabelG = mainContainer.append("g")
 				.attr("transform", "translate(0,"+(m[0])+")");
 			var mainLabel = mainLabelG.append("text")
-				.text("Number of influential articles in the year")
+				.text("Number of articles in the year")
 				// .attr("x", -m[1])
 				// .attr("x", 0)
 				// .attr("y", 10)
@@ -247,16 +254,16 @@ class TimelineVis {
 			// d3.select(".laneText").call(wrap);
 			mainLabel.call(wrap);
 
-			var subOffset = $( '#mainLabel' ).height();  // y offset for the sub label
-			var mainLabelSub = mainLabelG.append("text")
-				.attr("transform", "translate(0," + subOffset + ")")
-				.text("Size of circles indicates level of influence")
-				.style("font-size", "11px")
-				.attr("class", "laneText")
-				.attr("id", "mainLabelSub");
-
-			wrap.bounds({height: mainHeight - subOffset, width: (m[3] * .9)});
-			mainLabelSub.call(wrap);
+			// var subOffset = $( '#mainLabel' ).height();  // y offset for the sub label
+			// var mainLabelSub = mainLabelG.append("text")
+			// 	.attr("transform", "translate(0," + subOffset + ")")
+			// 	.text("Size of circles indicates level of influence")
+			// 	.style("font-size", "11px")
+			// 	.attr("class", "laneText")
+			// 	.attr("id", "mainLabelSub");
+            //
+			// wrap.bounds({height: mainHeight - subOffset, width: (m[3] * .9)});
+			// mainLabelSub.call(wrap);
 			
 			
 			//mini lanes and texts
@@ -333,7 +340,7 @@ class TimelineVis {
 					// d.y = 0;  // for now
 					d.y = miniHeight / 2;
 					// d.radius = 5 + efScale(d.eigenfactor_score);
-					d.radius = 1 + ( efScaleMini(d.eigenfactor) );
+					d.radius = 1 + ( efScaleMini(d.node_rank) );
 					return "translate(" + d.x + "," + d.y + ")";
 				});
 
@@ -417,7 +424,7 @@ class TimelineVis {
 							d.y = 0;  //for now
 							d.idx = i;
 							// d.radius = mainMinRad + (2 * efScale(d.eigenfactor));
-							d.radius = efScaleMain(d.eigenfactor);
+							d.radius = efScaleMain(d.node_rank);
 							return "translate(" + d.x + "," + d.y + ")";
 						})
 						.attr("title", function(d) {
@@ -433,7 +440,7 @@ class TimelineVis {
 							var span = $( '<span>' );
 							span.append( $( '<p class="tooltip title">' ).text(d.title) ); 
 							span.append( $( '<p class="tooltip authors">' ).text(d.authors.join(", ")) );
-							span.append( $( '<p class="tooltip journal">' ).text(d.venue) ); 
+							span.append( $( '<p class="tooltip journal">' ).text(d.venue ? d.venue : "Journal Unknown") ); 
 							span.append( $( '<p class="tooltip year">' ).text(d.year) ); 
 							return span.html();
 
@@ -477,7 +484,7 @@ class TimelineVis {
 							d.y = 0;  //for now
 							d.idx = i;
 							// d.radius = mainMinRad + (2 * efScale(d.eigenfactor));
-							d.radius = efScaleMain(d.eigenfactor);
+							d.radius = efScaleMain(d.node_rank);
 							return "translate(" + d.x + "," + d.y + ")";
 						});
 
@@ -804,7 +811,7 @@ class TimelineVis {
 			function expandAll() {
 				expand(paperItems);
 			}
-			var maxEF = d3.max(data_total, function(d) {return d.eigenfactor;});
+			var maxEF = d3.max(data_total, function(d) {return d.node_rank;});
 
 			function clearBrush() {
 				var mid = (brush.extent()[1] + brush.extent()[0]) / 2;

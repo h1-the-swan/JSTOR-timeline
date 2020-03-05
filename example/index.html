@@ -31,7 +31,7 @@
 		</style>
 	</head>
 	<body>
-		<h1 id="timelineHeading">Article timeline for topic: Climate Change</h1>
+		<h1 id="timelineHeading">Article timeline example</h1>
 		<h5 class="clickForDemo" title="Click here for a quick demo." style="cursor: pointer;"><a>How does this work?</a></h5>
 		<div id="timeline">
 		</div>
@@ -41,7 +41,7 @@
 		<a href="?m=circle">Circles</a> <br>
 		<a href="?m=icon">Icons</a>
 		<script type="text/javascript" charset="utf-8">
-			var json_endpoint = 'Climate_change.json';
+			var json_endpoint = 'data/test_jw_papers_graph.json';
 			
 			// http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
 			function getParameterByName(name, url) {
@@ -54,10 +54,10 @@
 				return decodeURIComponent(results[2].replace(/\+/g, " "));
 			}
 
-			var urlTopicName = getParameterByName('topic');
-			if (urlTopicName) {
-				json_endpoint = urlTopicName + ".json";
-				$( '#timelineHeading' ).text("Article timeline for topic: " + urlTopicName);
+			var fn = getParameterByName('fn');
+			if (fn) {
+				json_endpoint = fn;
+				$( '#timelineHeading' ).text("Article timeline for filename: " + fn);
 			}
 		</script>
 		<script src="../lib/d3_article_timeline.js" charset="utf-8"></script>

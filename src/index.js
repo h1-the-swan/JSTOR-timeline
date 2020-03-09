@@ -1,3 +1,4 @@
 import TimelineVis from './timelineVis_Main.js';
-export { TimelineVis };
+// export { TimelineVis };
+export default TimelineVis;
 

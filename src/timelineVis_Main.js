@@ -5,6 +5,18 @@ import * as d3 from 'd3';
 import jQuery from 'jquery';
 const $ = jQuery;
 
+function D3VersionException() {
+	this.name = 'D3VersionException';
+	this.message = 'd3 v3 required. detected version ' + d3.version;
+	this.stack = (new Error()).stack;
+}
+D3VersionException.prototype = new Error;
+
+// D3 v3 is required
+if (d3.version[0] != 3) {
+	throw new D3VersionException();
+}
+
 // reusable chart pattern inspired by:
 // https://bost.ocks.org/mike/chart/
 // and

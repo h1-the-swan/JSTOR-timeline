@@ -6,16 +6,16 @@ const env = require('yargs').argv.env; // use --env with webpack 2
 const pkg = require('./package.json');
 // const nodeExternals = require('webpack-node-externals');
 
-let libraryName = pkg.name;
+let libraryName = 'TimelineVis';
 
 let outputFile, mode;
 
 if (env === 'build') {
   mode = 'production';
-  outputFile = libraryName + '.min.js';
+  outputFile = pkg.name + '.min.js';
 } else {
   mode = 'development';
-  outputFile = libraryName + '.js';
+  outputFile = pkg.name + '.js';
 }
 
 const config = {

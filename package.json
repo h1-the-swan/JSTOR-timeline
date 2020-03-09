@@ -1,5 +1,5 @@
 {
-  "name": "d3_article_timeline",
+  "name": "d3-article-timeline",
   "version": "0.1.0",
   "description": "Timeline view of scholarly articles",
   "main": "lib/d3_article_timeline.js",

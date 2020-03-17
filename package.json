@@ -13,9 +13,9 @@
   },
   "author": "Jason Portenoy",
   "repository": {
-	"type": "git",
-	"url": "https://github.com/h1-the-swan/d3-article-timeline"
-  }
+    "type": "git",
+    "url": "https://github.com/h1-the-swan/d3-article-timeline"
+  },
   "license": "MIT",
   "devDependencies": {
     "@babel/cli": "^7.0.0-beta.51",
